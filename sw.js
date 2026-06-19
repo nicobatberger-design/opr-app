@@ -1,5 +1,5 @@
 /* Service worker OPR · Réserves — cache l'app pour usage hors-ligne (chantier sans réseau). */
-const CACHE = 'opr-v1';
+const CACHE = 'opr-v2';
 const ASSETS = [
   './',
   './index.html',
