@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="fond" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#3D6DFF"/>
+      <stop offset="1" stop-color="#1A33A3"/>
+    </linearGradient>
+    <linearGradient id="repere" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FF9A6B"/>
+      <stop offset="1" stop-color="#E0582C"/>
+    </linearGradient>
+  </defs>
+  <rect id="carre" width="512" height="512" rx="112" fill="url(#fond)"/>
+  <!-- ombre de la planchette -->
+  <rect x="130" y="124" width="236" height="296" rx="30" fill="#0B1D66" opacity="0.30"/>
+  <!-- planchette -->
+  <rect x="120" y="112" width="236" height="296" rx="30" fill="#FFFFFF"/>
+  <!-- pince -->
+  <rect x="180" y="82" width="116" height="60" rx="20" fill="#24305A"/>
+  <circle cx="238" cy="104" r="11" fill="#3D6DFF"/>
+  <!-- ligne 1 : cochée -->
+  <rect x="150" y="174" width="40" height="40" rx="11" fill="#10B981"/>
+  <path d="M159 194 l8 8 l15 -16" fill="none" stroke="#FFFFFF" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="204" y="187" width="118" height="14" rx="7" fill="#C8D2EE"/>
+  <!-- ligne 2 : cochée -->
+  <rect x="150" y="238" width="40" height="40" rx="11" fill="#10B981"/>
+  <path d="M159 258 l8 8 l15 -16" fill="none" stroke="#FFFFFF" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="204" y="251" width="96" height="14" rx="7" fill="#C8D2EE"/>
+  <!-- ligne 3 : à faire -->
+  <rect x="153" y="305" width="34" height="34" rx="9" fill="none" stroke="#C8D2EE" stroke-width="6"/>
+  <rect x="204" y="315" width="70" height="14" rx="7" fill="#C8D2EE"/>
+  <!-- repère de plan -->
+  <ellipse cx="372" cy="430" rx="34" ry="9" fill="#0B1D66" opacity="0.35"/>
+  <path d="M372 428 C352 398 308 356 308 300 A64 64 0 1 1 436 300 C436 356 392 398 372 428 Z" fill="url(#repere)" stroke="#FFFFFF" stroke-width="8" stroke-linejoin="round"/>
+  <circle cx="372" cy="298" r="24" fill="#FFFFFF"/>
+</svg>

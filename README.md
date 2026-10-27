@@ -1,23 +1,35 @@
-# OPR · Réserves
+# OPR Chantier — suivi de chantier & réserves
 
-Application web **hors ligne** pour relever les réserves d'un chantier directement sur le plan, puis éditer le
-**procès-verbal d'OPR** (opérations préalables à la réception).
+Application **hors ligne**, installable sur le **PC** (Edge, Chrome) comme sur le **téléphone** (iPhone, Android), pour
+suivre un chantier visite après visite puis mener les **OPR** (opérations préalables à la réception).
 
-👉 **Essayer :** https://nicobatberger-design.github.io/opr-app/ (s'installe sur le téléphone comme une application)
+👉 **Ouvrir / installer :** https://nicobatberger-design.github.io/opr-app/
+
+- **Sur PC** : ouvrir le lien dans Edge → menu ⋯ → *Applications* → *Installer ce site en tant qu'application*
+  (ou le bouton « Installer » de l'accueil). Aucun droit administrateur, aucun programme à télécharger.
+- **Sur iPhone** : ouvrir le lien dans Safari → *Partager* → *Sur l'écran d'accueil*.
 
 ## Ce qu'elle fait
 
-- **Plans annotés** : on importe le plan (photo ou image), on touche l'endroit, la réserve s'y épingle.
-- **Réserves qualifiées** : gravité bloquante, majeure ou mineure ; suivi des réserves levées ; filtres.
-- **Photos de terrain** prises avec l'appareil du téléphone, compressées pour rester légères.
-- **Procès-verbal** généré à partir des réserves, à imprimer ou enregistrer en PDF.
-- **Sauvegarde et transfert** d'un chantier complet en fichier JSON.
+- **Plusieurs chantiers**, chacun avec ses infos (adresse, MOA, MOE, entreprises).
+- **Suivi de chantier** : visites numérotées (date, météo, effectifs, présents, avancement), points à suivre
+  (à faire, qualité, sécurité, info), priorité, échéance, entreprise concernée, photos ; un point reste ouvert d'une
+  visite à l'autre jusqu'à ce qu'il soit soldé, les échéances dépassées ressortent en rouge.
+- **Compte rendu de visite** en PDF : points ouverts regroupés par entreprise, points soldés, plans annotés, diffusion.
+- **OPR** : réserves qualifiées (mineure, majeure, bloquante), levée des réserves, **procès-verbal** en PDF.
+  Un point de suivi peut être reporté en réserve d'un geste.
+- **Plans annotés** : import d'un plan PDF (une ou plusieurs pages), d'une photo ou d'une capture ; on touche (ou on
+  clique) l'endroit, le point s'y épingle. Zoom au doigt ou à la molette.
+- **Transfert** d'un chantier entre le téléphone et le PC par fichier, sauvegarde complète, export Excel (CSV).
 
 ## Choix techniques
 
-- **Aucun serveur, aucun compte** : tout reste dans le navigateur (IndexedDB). Rien ne part sur Internet.
+- **Aucun serveur, aucun compte** : tout reste sur l'appareil (IndexedDB). Rien ne part sur Internet.
 - **Fonctionne sans réseau** (service worker), ce qui compte au fond d'un sous-sol ou d'un bâtiment en travaux.
-- Un seul fichier HTML/JavaScript, sans dépendance.
+- Un fichier HTML/JavaScript ; seule bibliothèque : [pdf.js](https://mozilla.github.io/pdf.js/) (Apache 2.0) dans
+  `lib/`, chargée uniquement pour importer un plan PDF.
+- Les fichiers importés sont traités comme non fiables (textes échappés, images vérifiées).
+- Icônes rendues depuis `icons/icon.svg` par `outils/generer-icones.py`.
 
 ## Comment elle a été faite
 

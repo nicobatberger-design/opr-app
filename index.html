@@ -2,19 +2,23 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#FAFAF7">
+<meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="OPR Réserves">
+<meta name="apple-mobile-web-app-title" content="OPR Chantier">
+<meta name="description" content="Suivi de chantier et OPR : visites, points à suivre, réserves pointées sur plan, comptes rendus et PV en PDF. Fonctionne hors ligne.">
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="apple-touch-icon" href="icon-180.png">
-<title>OPR · Réserves</title>
+<link rel="icon" href="icons/favicon.ico" sizes="16x16 32x32 48x48">
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<title>OPR Chantier</title>
 <style>
   :root{
-    --cream:#FAFAF7; --brun:#5D4934; --bleu:#2D5BFF; --terra:#E8764D;
+    --cream:#FAFAF7; --brun:#3F3426; --bleu:#2D5BFF; --terra:#E8764D;
     --vert:#10B981; --rouge:#DC2626; --gris:#8A8175; --ligne:#E7E2D8;
-    --carte:#FFFFFF; --ombre:0 1px 3px rgba(93,73,52,.10),0 1px 2px rgba(93,73,52,.06);
+    --carte:#FFFFFF; --fond2:#F0EFEA; --ombre:0 1px 3px rgba(63,52,38,.10),0 1px 2px rgba(63,52,38,.06);
     --safe-top:env(safe-area-inset-top,0px); --safe-bot:env(safe-area-inset-bottom,0px);
   }
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -24,36 +28,78 @@
     background:var(--cream); color:var(--brun); font-size:16px; line-height:1.45;
     -webkit-text-size-adjust:100%; overscroll-behavior:none;
   }
+  button{font-family:inherit}
+  .wrap{max-width:860px; margin:0 auto}
+  [hidden]{display:none !important}
+
+  /* ===== En-tête ===== */
   header{
-    position:sticky; top:0; z-index:30; background:rgba(250,250,247,.92);
+    position:sticky; top:0; z-index:30; background:rgba(250,250,247,.93);
     backdrop-filter:saturate(180%) blur(12px); -webkit-backdrop-filter:saturate(180%) blur(12px);
     border-bottom:1px solid var(--ligne); padding:calc(var(--safe-top) + 10px) 14px 10px;
   }
-  .hrow{display:flex; align-items:center; gap:10px}
-  .logo{font-weight:800; font-size:18px; letter-spacing:-.02em}
-  .logo b{color:var(--terra)}
-  .hrow .sp{flex:1}
+  .hrow{display:flex; align-items:center; gap:10px; min-height:40px}
+  .logo{display:flex; align-items:center; gap:9px; font-weight:800; font-size:18px; letter-spacing:-.02em}
+  .logo img{width:30px; height:30px}
+  .logo b{color:var(--bleu)}
+  .ctitle{flex:1; min-width:0; border:none; background:none; text-align:left; padding:0; cursor:pointer; color:var(--brun)}
+  .ctitle .n{display:block; font-weight:800; font-size:17px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+  .ctitle .a{display:block; font-size:12px; color:var(--gris); overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+  .sp{flex:1}
   .iconbtn{
-    border:1px solid var(--ligne); background:var(--carte); color:var(--brun);
+    border:1px solid var(--ligne); background:var(--carte); color:var(--brun); flex:0 0 auto;
     width:40px; height:40px; border-radius:11px; font-size:18px; display:flex;
     align-items:center; justify-content:center; cursor:pointer;
   }
-  .chantier-bar{
-    margin-top:10px; display:flex; align-items:center; gap:8px; cursor:pointer;
-    background:var(--carte); border:1px solid var(--ligne); border-radius:11px; padding:9px 12px;
+  .iconbtn:hover{border-color:#D3CCBE}
+  .modseg{display:flex; gap:4px; margin-top:10px; background:var(--fond2); border-radius:12px; padding:4px}
+  .modseg button{flex:1; border:none; background:transparent; color:var(--gris); font-weight:800; font-size:14px; padding:9px 6px; border-radius:9px; cursor:pointer}
+  .modseg button.on{background:var(--brun); color:#fff; box-shadow:var(--ombre)}
+  .ctxrow{display:flex; gap:8px; margin-top:10px}
+  .ctxbar{
+    flex:1; min-width:0; display:flex; align-items:center; gap:8px; cursor:pointer; text-align:left;
+    background:var(--carte); border:1px solid var(--ligne); border-radius:11px; padding:9px 12px; color:var(--brun); font-size:14px;
   }
-  .chantier-bar .t{font-weight:600; font-size:14px; flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
-  .chantier-bar .chev{color:var(--gris); font-size:13px}
-  .chantier-bar.vide .t{color:var(--terra)}
+  .ctxbar .t{font-weight:700; flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+  .ctxbar .chev{color:var(--gris); font-size:13px; flex:0 0 auto}
+  .ctxbar.vide .t{color:var(--terra)}
+  .ctxbtn{flex:0 0 auto; border:1px solid var(--bleu); background:var(--carte); color:var(--bleu); font-weight:700; font-size:14px; border-radius:11px; padding:0 12px; cursor:pointer}
   .stats{display:flex; gap:8px; margin-top:10px}
   .stat{flex:1; background:var(--carte); border:1px solid var(--ligne); border-radius:11px; padding:8px 6px; text-align:center}
   .stat .n{font-size:20px; font-weight:800; line-height:1}
   .stat .l{font-size:11px; color:var(--gris); margin-top:3px; text-transform:uppercase; letter-spacing:.04em}
-  .stat.lever .n{color:var(--terra)} .stat.levee .n{color:var(--vert)}
-  /* onglets Liste / Plan */
-  .tabs{display:flex; gap:6px; margin-top:10px; background:#F0EFEA; border-radius:11px; padding:4px}
-  .tabs button{flex:1; border:none; background:transparent; color:var(--gris); font-weight:700; font-size:14px; padding:8px; border-radius:8px; cursor:pointer}
+  .stat.terra .n{color:var(--terra)} .stat.vert .n{color:var(--vert)} .stat.rouge .n{color:var(--rouge)}
+  .tabs{display:flex; gap:6px; margin-top:10px; background:var(--fond2); border-radius:11px; padding:4px}
+  .tabs button{flex:1; border:none; background:transparent; color:var(--gris); font-weight:700; font-size:14px; padding:7px; border-radius:8px; cursor:pointer}
   .tabs button.on{background:var(--carte); color:var(--brun); box-shadow:var(--ombre)}
+
+  /* ===== Accueil ===== */
+  #vHome{padding:16px 14px calc(40px + var(--safe-bot))}
+  .home-head{display:flex; align-items:center; gap:10px; margin:6px 0 14px}
+  .home-head h1{font-size:22px; margin:0; letter-spacing:-.02em; flex:1}
+  .btn-sm{border:none; background:var(--bleu); color:#fff; font-weight:700; font-size:14px; border-radius:11px; padding:10px 14px; cursor:pointer; box-shadow:0 3px 10px rgba(45,91,255,.25)}
+  .ccard{
+    display:block; width:100%; text-align:left; color:var(--brun); cursor:pointer;
+    background:var(--carte); border:1px solid var(--ligne); border-radius:14px; box-shadow:var(--ombre); padding:14px; margin-bottom:11px;
+  }
+  .ccard:hover{border-color:#D3CCBE}
+  .cc-nom{font-weight:800; font-size:16px}
+  .cc-adr{font-size:13px; color:var(--gris); margin-top:1px}
+  .cc-tags{display:flex; flex-wrap:wrap; gap:6px; margin-top:9px}
+  .tag{font-size:12px; font-weight:700; padding:3px 9px; border-radius:20px; background:var(--fond2); color:var(--gris)}
+  .tag.terra{background:#FCE9DF; color:#B8532B} .tag.rouge{background:#FBE0E0; color:var(--rouge)} .tag.vert{background:#DDF5EC; color:#0B8A5F} .tag.bleu{background:#E8EEFF; color:var(--bleu)}
+  .cc-meta{font-size:12px; color:var(--gris); margin-top:8px}
+  .install{
+    display:flex; gap:12px; align-items:center; background:linear-gradient(135deg,#EEF2FF,#F7F4FF); border:1px solid #D6E0FF;
+    border-radius:14px; padding:12px 14px; margin-bottom:16px;
+  }
+  .install img{width:46px; height:46px; flex:0 0 auto}
+  .install .tx{flex:1; font-size:14px}
+  .install .tx b{display:block; font-size:15px}
+  .install .x{border:none; background:none; color:var(--gris); font-size:20px; cursor:pointer; align-self:flex-start; padding:0 2px}
+  .foot-note{font-size:12px; color:var(--gris); text-align:center; margin-top:26px}
+
+  /* ===== Liste ===== */
   .filtres{display:flex; gap:7px; overflow-x:auto; padding:12px 14px 4px; -webkit-overflow-scrolling:touch}
   .filtres::-webkit-scrollbar{display:none}
   .chip{
@@ -61,32 +107,40 @@
     padding:7px 13px; border-radius:20px; font-size:13px; font-weight:600; cursor:pointer; white-space:nowrap;
   }
   .chip.on{background:var(--brun); color:#fff; border-color:var(--brun)}
+  select.chip{appearance:none; -webkit-appearance:none; padding-right:26px; max-width:220px;
+    background-image:linear-gradient(45deg,transparent 50%,currentColor 50%),linear-gradient(135deg,currentColor 50%,transparent 50%);
+    background-position:calc(100% - 15px) 52%,calc(100% - 10px) 52%; background-size:5px 5px,5px 5px; background-repeat:no-repeat}
   main{padding:6px 14px calc(120px + var(--safe-bot))}
-  .vide-msg{text-align:center; color:var(--gris); padding:60px 20px}
+  .vide-msg{text-align:center; color:var(--gris); padding:56px 20px}
   .vide-msg .big{font-size:40px; margin-bottom:8px}
+  .grp{font-size:12px; font-weight:800; color:var(--gris); text-transform:uppercase; letter-spacing:.05em; margin:16px 2px 8px}
   .carte{
     background:var(--carte); border:1px solid var(--ligne); border-radius:14px; box-shadow:var(--ombre);
-    padding:12px; margin-bottom:11px; display:flex; gap:11px; cursor:pointer;
+    padding:12px; margin-bottom:11px; display:flex; gap:11px; cursor:pointer; width:100%; text-align:left; color:var(--brun); font-size:inherit;
   }
-  .carte .vign{
+  .carte:hover{border-color:#D3CCBE}
+  .carte.fait{opacity:.72}
+  .vign{
     width:62px; height:62px; border-radius:9px; object-fit:cover; flex:0 0 auto;
     background:var(--cream); border:1px solid var(--ligne); display:flex; align-items:center; justify-content:center; color:var(--gris); font-size:22px;
   }
   .carte .body{flex:1; min-width:0}
-  .carte .l1{display:flex; align-items:center; gap:7px}
+  .l1{display:flex; align-items:center; gap:7px}
   .num{font-weight:800; font-size:14px; color:var(--bleu); flex:0 0 auto}
-  .grav{font-size:10px; font-weight:700; padding:2px 7px; border-radius:6px; text-transform:uppercase; letter-spacing:.03em}
-  .grav.mineure{background:#F0EFEA; color:var(--gris)}
-  .grav.majeure{background:#FCE9DF; color:var(--terra)}
-  .grav.bloquante{background:#FBE0E0; color:var(--rouge)}
-  .carte .loc{font-size:12px; color:var(--gris); margin-left:auto; flex:0 0 auto; max-width:46%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
-  .carte .desc{font-size:14px; margin-top:4px; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden}
-  .carte .l3{display:flex; align-items:center; gap:8px; margin-top:6px; font-size:12px; color:var(--gris)}
-  .pastille{display:inline-flex; align-items:center; gap:4px; font-weight:600}
-  .pastille.lever{color:var(--terra)} .pastille.levee{color:var(--vert)}
+  .grav{font-size:10px; font-weight:800; padding:2px 7px; border-radius:6px; text-transform:uppercase; letter-spacing:.03em; flex:0 0 auto}
+  .grav.mineure,.grav.info{background:var(--fond2); color:var(--gris)}
+  .grav.majeure,.grav.afaire{background:#FCE9DF; color:#B8532B}
+  .grav.bloquante,.grav.securite,.grav.urgent{background:#FBE0E0; color:var(--rouge)}
+  .grav.qualite{background:#E8EEFF; color:var(--bleu)}
+  .l1 .loc{font-size:12px; color:var(--gris); margin-left:auto; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+  .desc{font-size:14px; margin-top:4px; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden}
+  .l3{display:flex; align-items:center; flex-wrap:wrap; gap:4px 9px; margin-top:6px; font-size:12px; color:var(--gris)}
+  .pastille{display:inline-flex; align-items:center; gap:4px; font-weight:700}
+  .pastille.ouvert{color:var(--terra)} .pastille.fait{color:var(--vert)}
   .dot{width:7px; height:7px; border-radius:50%; background:currentColor}
-  .pin-badge{margin-left:2px; color:var(--bleu); font-weight:600}
-  .nbphotos{margin-left:auto}
+  .retard{color:var(--rouge); font-weight:700}
+  .pin-badge{color:var(--bleu); font-weight:600}
+  .l3 .nbphotos{margin-left:auto}
   .fab{
     position:fixed; left:50%; transform:translateX(-50%); bottom:calc(20px + var(--safe-bot)); z-index:40;
     background:var(--bleu); color:#fff; border:none; border-radius:30px; padding:15px 26px;
@@ -95,284 +149,379 @@
   }
 
   /* ===== Vue plan ===== */
-  #planView{display:none; padding:0}
-  #planView.on{display:block}
-  .plan-tabs{display:flex; gap:7px; overflow-x:auto; padding:10px 14px 4px}
+  #planView{padding:0}
+  .plan-tabs{display:flex; gap:7px; overflow-x:auto; padding:10px 14px 8px}
   .plan-tabs::-webkit-scrollbar{display:none}
   .plan-empty{text-align:center; color:var(--gris); padding:50px 24px}
   .plan-empty .big{font-size:40px; margin-bottom:10px}
-  .plan-stage{
-    position:relative; overflow:hidden; background:#EEEAE2;
-    height:calc(100vh - 250px - var(--safe-top) - var(--safe-bot)); min-height:300px;
-    touch-action:none; -webkit-user-select:none; user-select:none;
-  }
+  .plan-stage{position:relative; overflow:hidden; background:#E9E5DC; height:60vh; min-height:280px; touch-action:none; -webkit-user-select:none; user-select:none}
   .plan-canvas{position:absolute; top:0; left:0; transform-origin:0 0; will-change:transform}
   .plan-canvas img{display:block; max-width:none; pointer-events:none}
   .pin{
     position:absolute; transform:translate(-50%,-50%) scale(var(--inv,1)); transform-origin:center;
-    width:30px; height:30px; border-radius:50%; border:2.5px solid #fff; cursor:pointer;
-    display:flex; align-items:center; justify-content:center; color:#fff; font-weight:800; font-size:12px;
+    width:30px; height:30px; border-radius:50%; border:2.5px solid #fff; cursor:pointer; padding:0;
+    display:flex; align-items:center; justify-content:center; color:#fff; font-weight:800; font-size:11px;
     box-shadow:0 2px 5px rgba(0,0,0,.4); background:var(--gris);
   }
-  .pin.majeure{background:var(--terra)} .pin.bloquante{background:var(--rouge)} .pin.levee{background:var(--vert)}
-  .plan-toolbar{
-    position:absolute; left:12px; right:12px; bottom:calc(14px + var(--safe-bot)); z-index:5;
-    display:flex; gap:8px; align-items:center;
-  }
-  .plan-toolbar .tbtn{
-    background:rgba(255,255,255,.95); border:1px solid var(--ligne); border-radius:11px; padding:11px 14px;
-    font-size:14px; font-weight:700; color:var(--brun); cursor:pointer; box-shadow:var(--ombre);
-  }
-  .plan-toolbar .tbtn.primary{background:var(--bleu); color:#fff; border-color:var(--bleu); flex:1; text-align:center}
-  .plan-banner{
-    position:absolute; left:12px; right:12px; top:12px; z-index:6; background:var(--brun); color:#fff;
-    padding:10px 14px; border-radius:11px; font-size:14px; font-weight:600; text-align:center; box-shadow:var(--ombre);
-    display:none;
-  }
+  .pin.majeure,.pin.afaire{background:var(--terra)} .pin.bloquante,.pin.securite,.pin.urgent{background:var(--rouge)}
+  .pin.qualite{background:var(--bleu)} .pin.fait{background:var(--vert)}
+  .plan-toolbar{position:absolute; left:12px; right:12px; bottom:calc(14px + var(--safe-bot)); z-index:5; display:flex; gap:8px; align-items:center; justify-content:center}
+  .tbtn{background:rgba(255,255,255,.96); border:1px solid var(--ligne); border-radius:11px; padding:11px 14px; font-size:14px; font-weight:700; color:var(--brun); cursor:pointer; box-shadow:var(--ombre)}
+  .tbtn.primary{background:var(--bleu); color:#fff; border-color:var(--bleu); flex:1; max-width:340px; text-align:center}
+  .plan-banner{position:absolute; left:12px; right:12px; top:12px; z-index:6; background:var(--brun); color:#fff; padding:10px 14px; border-radius:11px; font-size:14px; font-weight:600; text-align:center; box-shadow:var(--ombre); display:none}
   .plan-banner.on{display:block}
   .plan-stage.placing{cursor:crosshair}
 
-  /* feuilles modales */
+  /* ===== Feuilles ===== */
   .sheet-bg{position:fixed; inset:0; background:rgba(40,32,22,.45); z-index:50; opacity:0; pointer-events:none; transition:opacity .2s}
   .sheet-bg.on{opacity:1; pointer-events:auto}
   .sheet{
     position:fixed; left:0; right:0; bottom:0; z-index:51; background:var(--cream);
-    border-radius:20px 20px 0 0; max-height:94vh; transform:translateY(100%); transition:transform .25s ease;
+    border-radius:20px 20px 0 0; max-height:94vh; transform:translateY(100%); visibility:hidden;
+    transition:transform .25s ease, visibility 0s linear .25s;
     display:flex; flex-direction:column; box-shadow:0 -4px 30px rgba(0,0,0,.2);
   }
-  .sheet.on{transform:translateY(0)}
+  .sheet.on{transform:translateY(0); visibility:visible; transition:transform .25s ease}
   .sheet-head{display:flex; align-items:center; gap:10px; padding:14px 16px; border-bottom:1px solid var(--ligne)}
-  .sheet-head .ttl{font-weight:800; font-size:17px; flex:1}
-  .linkbtn{background:none; border:none; color:var(--bleu); font-size:16px; font-weight:600; cursor:pointer; padding:6px}
+  .sheet-head .ttl{font-weight:800; font-size:17px; flex:1; text-align:center}
+  .linkbtn{background:none; border:none; color:var(--bleu); font-size:16px; font-weight:600; cursor:pointer; padding:6px; min-width:64px; text-align:left}
+  .linkbtn.r{text-align:right}
   .linkbtn.danger{color:var(--rouge)}
   .sheet-body{overflow-y:auto; padding:16px; -webkit-overflow-scrolling:touch}
-  .sheet-foot{padding:12px 16px calc(14px + var(--safe-bot)); border-top:1px solid var(--ligne); background:var(--cream)}
+  .sheet-foot{padding:12px 16px calc(14px + var(--safe-bot)); border-top:1px solid var(--ligne); background:var(--cream); border-radius:0 0 18px 18px}
   label.f{display:block; font-size:12px; font-weight:700; color:var(--gris); text-transform:uppercase; letter-spacing:.04em; margin:14px 0 6px}
-  label.f:first-child{margin-top:0}
+  .sheet-body > label.f:first-child{margin-top:0}
   input.t, textarea.t, select.t{
     width:100%; border:1px solid var(--ligne); background:var(--carte); color:var(--brun);
     border-radius:11px; padding:12px 13px; font-size:16px; font-family:inherit;
   }
+  input.t:focus, textarea.t:focus{outline:2px solid #C9D6FF; border-color:var(--bleu)}
   textarea.t{min-height:90px; resize:vertical; line-height:1.4}
   .grid2{display:grid; grid-template-columns:1fr 1fr; gap:10px}
+  .grid2 > div > label.f{margin-top:0}
   .seg{display:flex; gap:7px}
   .seg button{
     flex:1; border:1px solid var(--ligne); background:var(--carte); color:var(--brun);
-    padding:11px 4px; border-radius:11px; font-size:13px; font-weight:700; cursor:pointer;
+    padding:11px 3px; border-radius:11px; font-size:13px; font-weight:700; cursor:pointer;
   }
-  .seg button.on.mineure{background:var(--gris); color:#fff; border-color:var(--gris)}
-  .seg button.on.majeure{background:var(--terra); color:#fff; border-color:var(--terra)}
-  .seg button.on.bloquante{background:var(--rouge); color:#fff; border-color:var(--rouge)}
-  .seg.statut button.on.lever{background:var(--terra); color:#fff; border-color:var(--terra)}
-  .seg.statut button.on.levee{background:var(--vert); color:#fff; border-color:var(--vert)}
-  .plan-link{
-    display:flex; align-items:center; gap:8px; background:#EEF2FF; border:1px solid #D6E0FF; color:var(--bleu);
-    border-radius:11px; padding:10px 12px; font-size:14px; font-weight:600; margin-top:4px;
-  }
-  .plan-link .rm{margin-left:auto; color:var(--rouge); background:none; border:none; font-weight:600; cursor:pointer}
-  .btn-place{width:100%; background:var(--carte); color:var(--bleu); border:1px dashed var(--bleu); border-radius:11px; padding:12px; font-size:15px; font-weight:700; cursor:pointer; margin-top:4px}
-  .photos{display:flex; flex-wrap:wrap; gap:9px; margin-top:4px}
+  .seg button.on{background:var(--gris); color:#fff; border-color:var(--gris)}
+  .seg button.on.majeure,.seg button.on.afaire,.seg button.on.ouvert,.seg button.on.lever{background:var(--terra); border-color:var(--terra)}
+  .seg button.on.bloquante,.seg button.on.securite,.seg button.on.urgente{background:var(--rouge); border-color:var(--rouge)}
+  .seg button.on.qualite{background:var(--bleu); border-color:var(--bleu)}
+  .seg button.on.fait,.seg button.on.levee{background:var(--vert); border-color:var(--vert)}
+  .plan-link{display:flex; align-items:center; gap:8px; background:#EEF2FF; border:1px solid #D6E0FF; color:var(--bleu); border-radius:11px; padding:10px 12px; font-size:14px; font-weight:600; margin-bottom:4px}
+  .plan-link .rm{margin-left:auto; color:var(--rouge); background:none; border:none; font-weight:600; cursor:pointer; font-size:14px}
+  .btn-place{width:100%; background:var(--carte); color:var(--bleu); border:1px dashed var(--bleu); border-radius:11px; padding:12px; font-size:15px; font-weight:700; cursor:pointer; margin-bottom:4px}
+  .photos{display:flex; flex-wrap:wrap; gap:9px}
   .photo{position:relative; width:84px; height:84px; border-radius:10px; overflow:hidden; border:1px solid var(--ligne)}
-  .photo img{width:100%; height:100%; object-fit:cover}
-  .photo .x{position:absolute; top:3px; right:3px; width:22px; height:22px; border-radius:50%; background:rgba(0,0,0,.6); color:#fff; border:none; font-size:14px; line-height:22px; cursor:pointer}
+  .photo img{width:100%; height:100%; object-fit:cover; cursor:zoom-in}
+  .photo .x{position:absolute; top:3px; right:3px; width:24px; height:24px; border-radius:50%; background:rgba(0,0,0,.6); color:#fff; border:none; font-size:15px; line-height:24px; padding:0; cursor:pointer}
   .addphoto{
     width:84px; height:84px; border-radius:10px; border:1.5px dashed var(--gris); color:var(--gris);
-    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; font-size:12px; cursor:pointer; background:var(--carte);
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; font-size:12px; font-weight:600; cursor:pointer; background:var(--carte);
   }
   .addphoto .pic{font-size:22px}
   .btn-primary{width:100%; background:var(--bleu); color:#fff; border:none; border-radius:13px; padding:15px; font-size:17px; font-weight:700; cursor:pointer}
-  .btn-ghost{width:100%; background:var(--carte); color:var(--brun); border:1px solid var(--ligne); border-radius:13px; padding:14px; font-size:16px; font-weight:600; cursor:pointer; margin-top:9px}
-  .menu-item{display:flex; align-items:center; gap:12px; padding:15px 4px; border-bottom:1px solid var(--ligne); font-size:16px; cursor:pointer}
-  .menu-item .ic{font-size:20px; width:26px; text-align:center}
+  .btn-ghost{width:100%; background:var(--carte); color:var(--brun); border:1px solid var(--ligne); border-radius:13px; padding:13px; font-size:15px; font-weight:600; cursor:pointer; margin-top:14px}
+  .btn-ghost.bleu{color:var(--bleu); border-color:#C9D6FF}
+  .menu-item{display:flex; align-items:center; gap:12px; padding:14px 4px; border:none; border-bottom:1px solid var(--ligne); width:100%; background:none; text-align:left; font-size:16px; color:var(--brun); cursor:pointer}
+  .menu-item:last-child{border-bottom:none}
+  .menu-item .ic{font-size:20px; width:28px; text-align:center; flex:0 0 auto}
   .menu-item small{display:block; color:var(--gris); font-size:12px; font-weight:400}
   .menu-item.danger{color:var(--rouge)}
   .hint{font-size:12px; color:var(--gris); margin-top:7px; line-height:1.4}
+  .vchips{display:flex; gap:7px; overflow-x:auto; padding-bottom:4px; margin-bottom:6px}
+  .vchips::-webkit-scrollbar{display:none}
+  .lien-res{display:inline-block; margin-top:10px; font-size:13px; font-weight:700; color:var(--bleu)}
   .toast{
     position:fixed; left:50%; bottom:calc(96px + var(--safe-bot)); transform:translateX(-50%) translateY(20px);
     background:var(--brun); color:#fff; padding:11px 18px; border-radius:22px; font-size:14px; font-weight:600;
     z-index:90; opacity:0; transition:all .25s; pointer-events:none; box-shadow:0 4px 16px rgba(0,0,0,.25); max-width:90%; text-align:center;
   }
   .toast.on{opacity:1; transform:translateX(-50%) translateY(0)}
+  .zoom{position:fixed; inset:0; z-index:95; background:rgba(0,0,0,.88); display:flex; align-items:center; justify-content:center; cursor:zoom-out; padding:20px}
+  .zoom img{max-width:100%; max-height:100%; border-radius:6px}
+
+  /* ===== Grand écran (PC) ===== */
+  @media (min-width:760px){
+    header{padding-left:24px; padding-right:24px}
+    .sheet{
+      left:50%; right:auto; top:50%; bottom:auto; width:min(620px,92vw); max-height:88vh; border-radius:18px;
+      transform:translate(-50%,-46%); opacity:0; transition:transform .2s ease, opacity .2s ease, visibility 0s linear .2s;
+    }
+    .sheet.on{transform:translate(-50%,-50%); opacity:1; transition:transform .2s ease, opacity .2s ease}
+    .sheet-head{border-radius:18px 18px 0 0}
+    .carte .desc{-webkit-line-clamp:3}
+    .fab{left:auto; right:max(24px, calc((100vw - 860px)/2)); transform:none}
+    .toast{bottom:auto; top:18px; transform:translateX(-50%) translateY(-20px)}
+  }
 
   #pv{display:none}
   @media print{
-    @page{margin:14mm 12mm}
-    header,.filtres,main,.fab,.sheet,.sheet-bg,.toast,#planView{display:none !important}
-    #pv{display:block; color:#000; font-size:11px}
-    #pv h1{font-size:20px; margin:0 0 2px}
-    #pv h2{font-size:15px; margin:20px 0 6px; border-bottom:1px solid #999; padding-bottom:3px}
-    #pv .meta{font-size:11px; color:#333; margin-bottom:14px}
-    #pv .meta b{color:#000}
-    #pv table{width:100%; border-collapse:collapse; margin-top:6px}
-    #pv th,#pv td{border:1px solid #999; padding:5px 6px; text-align:left; vertical-align:top}
-    #pv th{background:#f0eee9; font-size:10px; text-transform:uppercase; letter-spacing:.03em}
+    @page{size:A4; margin:12mm 11mm}
+    body{background:#fff}
+    body > *:not(#pv){display:none !important}
+    #pv{display:block !important; color:#111; font-size:10.5px; line-height:1.35}
+    #pv .pv-top{display:flex; justify-content:space-between; gap:20px; border-bottom:2px solid #222; padding-bottom:8px; margin-bottom:10px}
+    #pv .pv-k{font-size:10px; text-transform:uppercase; letter-spacing:.08em; color:#555; font-weight:700}
+    #pv h1{font-size:18px; margin:2px 0 0}
+    #pv .pv-r{text-align:right; font-size:10px; color:#333}
+    #pv h2{font-size:13px; margin:16px 0 6px; padding:4px 6px; background:#EFEDE7; border-left:4px solid #2D5BFF}
+    #pv h3{font-size:11.5px; margin:10px 0 4px}
+    #pv table{width:100%; border-collapse:collapse}
+    #pv .meta td{padding:3px 6px; border:1px solid #bbb; vertical-align:top}
+    #pv .meta td.k{width:22%; background:#F6F5F1; font-weight:700}
+    #pv .lst th,#pv .lst td{border:1px solid #aaa; padding:4px 5px; text-align:left; vertical-align:top}
+    #pv .lst th{background:#EFEDE7; font-size:9px; text-transform:uppercase; letter-spacing:.03em}
     #pv .rnum{font-weight:800; white-space:nowrap}
     #pv tr{break-inside:avoid}
-    #pv .pvphoto{width:120px; height:auto; border:1px solid #999; border-radius:4px; margin:3px 3px 0 0}
-    #pv .pgrav{font-weight:700}
-    #pv .pvplan{width:100%; border:1px solid #999; margin:4px 0 10px; break-inside:avoid}
-    #pv .sign{margin-top:30px; display:flex; gap:40px; font-size:11px}
-    #pv .sign div{flex:1; border-top:1px solid #999; padding-top:5px}
+    #pv .pvphoto{width:115px; height:auto; border:1px solid #999; border-radius:3px; margin:3px 3px 0 0}
+    #pv .b{font-weight:700}
+    #pv .rouge{color:#C01818; font-weight:700}
+    #pv .txt{white-space:pre-wrap; border:1px solid #ccc; padding:6px 8px; border-radius:3px}
+    #pv .pvplan{width:100%; border:1px solid #999; margin:4px 0 10px}
+    #pv .planbloc{break-inside:avoid}
+    #pv .sign{margin-top:28px; display:flex; gap:30px; font-size:10.5px; break-inside:avoid}
+    #pv .sign div{flex:1; border-top:1px solid #777; padding-top:5px; min-height:70px}
+    #pv .pied{margin-top:16px; font-size:9px; color:#666}
   }
 </style>
 </head>
 <body>
 
 <header>
-  <div class="hrow">
-    <div class="logo">OPR<b>·</b>Réserves</div>
-    <div class="sp"></div>
-    <button class="iconbtn" id="btnExport" title="Exporter le PV">⤓</button>
-    <button class="iconbtn" id="btnMenu" title="Menu">⋯</button>
-  </div>
-  <div class="chantier-bar vide" id="chantierBar">
-    <span class="t" id="chantierTitre">Renseigner le chantier</span>
-    <span class="chev">modifier ›</span>
-  </div>
-  <div class="stats">
-    <div class="stat"><div class="n" id="sTotal">0</div><div class="l">Réserves</div></div>
-    <div class="stat lever"><div class="n" id="sLever">0</div><div class="l">À lever</div></div>
-    <div class="stat levee"><div class="n" id="sLevee">0</div><div class="l">Levées</div></div>
-  </div>
-  <div class="tabs">
-    <button id="tabListe" class="on">Liste</button>
-    <button id="tabPlan">Plan</button>
+  <div class="wrap">
+    <div class="hrow">
+      <button class="iconbtn" id="btnBack" title="Mes chantiers" aria-label="Retour à mes chantiers" hidden>‹</button>
+      <div class="logo" id="logo"><img src="icons/icon.svg" alt=""><span>OPR <b>Chantier</b></span></div>
+      <button class="ctitle" id="ctitle" title="Infos du chantier" hidden><span class="n" id="ctN"></span><span class="a" id="ctA"></span></button>
+      <div class="sp" id="hsp"></div>
+      <button class="iconbtn" id="btnExport" title="Compte rendu / PV en PDF" aria-label="Exporter en PDF" hidden>⤓</button>
+      <button class="iconbtn" id="btnMenu" title="Menu" aria-label="Menu">⋯</button>
+    </div>
+    <div id="chHead" hidden>
+      <div class="modseg">
+        <button data-m="suivi">Suivi de chantier</button>
+        <button data-m="opr">OPR · Réserves</button>
+      </div>
+      <div class="ctxrow">
+        <button class="ctxbar" id="ctxBar"><span class="t" id="ctxT"></span><span class="chev">modifier ›</span></button>
+        <button class="ctxbtn" id="ctxNew">＋ Visite</button>
+      </div>
+      <div class="stats" id="stats"></div>
+      <div class="tabs"><button id="tabListe" class="on">Liste</button><button id="tabPlan">Plan</button></div>
+    </div>
   </div>
 </header>
 
-<div class="filtres" id="filtres">
-  <button class="chip on" data-f="all">Toutes</button>
-  <button class="chip" data-f="lever">À lever</button>
-  <button class="chip" data-f="levee">Levées</button>
-  <button class="chip" data-f="bloquante">Bloquantes</button>
-  <button class="chip" data-f="majeure">Majeures</button>
-</div>
+<section id="vHome" class="wrap">
+  <div id="installCard"></div>
+  <div class="home-head"><h1>Mes chantiers</h1><button class="btn-sm" id="hNew">＋ Nouveau chantier</button></div>
+  <div id="chList"></div>
+  <p class="foot-note" id="homeNote"></p>
+</section>
 
-<main id="liste"></main>
-
-<!-- ===== Vue plan ===== -->
-<div id="planView">
-  <div class="plan-tabs" id="planTabs"></div>
-  <div class="plan-empty" id="planEmpty">
-    <div class="big">🗺️</div>
-    Aucun plan importé.<br>Ajoute une photo du plan (ou une capture d'écran) pour pointer tes réserves dessus.
-    <div style="margin-top:16px"><button class="btn-primary" id="planEmptyAdd" style="max-width:240px;margin:0 auto">＋ Importer un plan</button></div>
-  </div>
-  <div class="plan-stage" id="planStage" style="display:none">
-    <div class="plan-canvas" id="planCanvas"></div>
-    <div class="plan-banner" id="planBanner">Touche le plan à l'endroit exact de la réserve</div>
-    <div class="plan-toolbar" id="planToolbar">
-      <button class="tbtn primary" id="planPlace">＋ Pointer une réserve</button>
-      <button class="tbtn" id="planFit" title="Recentrer">⤢</button>
+<section id="vCh" hidden>
+  <div class="filtres wrap" id="filtres"></div>
+  <main id="liste" class="wrap"></main>
+  <div id="planView" hidden>
+    <div class="plan-tabs wrap" id="planTabs"></div>
+    <div class="plan-empty" id="planEmpty">
+      <div class="big">🗺️</div>
+      Aucun plan pour ce chantier.<br>Importe un plan (PDF, photo ou capture d'écran) pour y pointer tes points et réserves.
+      <div style="margin-top:16px"><button class="btn-primary" id="planEmptyAdd" style="max-width:260px">＋ Importer un plan</button></div>
+    </div>
+    <div class="plan-stage" id="planStage" hidden>
+      <div class="plan-canvas" id="planCanvas"></div>
+      <div class="plan-banner" id="planBanner">Touche le plan à l'endroit exact</div>
+      <div class="plan-toolbar">
+        <button class="tbtn primary" id="planPlace">＋ Pointer sur le plan</button>
+        <button class="tbtn" id="planFit" title="Recentrer le plan">⤢</button>
+      </div>
     </div>
   </div>
-</div>
+</section>
 
-<input type="file" id="planFile" accept="image/*" hidden>
-<button class="fab" id="fabAdd">＋ Réserve</button>
+<input type="file" id="planFile" accept="image/*,application/pdf,.pdf" hidden>
+<input type="file" id="importFile" accept="application/json,.json" hidden>
+<input type="file" id="iFileCam" accept="image/*" capture="environment" multiple hidden>
+<input type="file" id="iFileGal" accept="image/*" multiple hidden>
+<button class="fab" id="fab" hidden></button>
 
-<!-- ===== Feuille réserve ===== -->
-<div class="sheet-bg" id="bgReserve"></div>
-<div class="sheet" id="sheetReserve">
+<!-- ===== Feuille point / réserve ===== -->
+<div class="sheet-bg" id="bgItem"></div>
+<div class="sheet" id="shItem" role="dialog" aria-labelledby="iTitre">
   <div class="sheet-head">
-    <button class="linkbtn" id="rCancel">Annuler</button>
-    <span class="ttl" id="rTitre">Réserve</span>
-    <button class="linkbtn danger" id="rDelete" style="display:none">Suppr.</button>
+    <button class="linkbtn" id="iCancel">Annuler</button>
+    <span class="ttl" id="iTitre">Point</span>
+    <button class="linkbtn danger r" id="iDelete">Suppr.</button>
   </div>
   <div class="sheet-body">
-    <div id="rPlanLink"></div>
-
+    <div id="iPlanLink"></div>
     <label class="f">Photos</label>
-    <div class="photos" id="rPhotos"></div>
-    <input type="file" id="rFile" accept="image/*" capture="environment" multiple hidden>
+    <div class="photos" id="iPhotos"></div>
 
     <label class="f">Localisation</label>
     <div class="grid2">
-      <input class="t" id="rNiveau" placeholder="Niveau (RDC, R+1…)" list="dlNiveaux">
-      <input class="t" id="rLocal" placeholder="Local (Bureau 2…)" list="dlLocaux">
+      <input class="t" id="iNiveau" placeholder="Niveau (RDC, R+1…)" list="dlNiveaux">
+      <input class="t" id="iLocal" placeholder="Local (Bureau 2…)" list="dlLocaux">
     </div>
-    <input class="t" id="rEmpl" placeholder="Emplacement (mur Est, plafond, allège…)" style="margin-top:10px" list="dlEmpl">
-    <datalist id="dlNiveaux"></datalist><datalist id="dlLocaux"></datalist><datalist id="dlEmpl"></datalist>
+    <input class="t" id="iEmpl" placeholder="Emplacement (mur Est, plafond, allège…)" style="margin-top:10px" list="dlEmpl">
 
     <label class="f">Lot / Entreprise</label>
-    <input class="t" id="rLot" placeholder="Ex : Peinture — SARL Dupont" list="dlLots">
-    <datalist id="dlLots"></datalist>
+    <input class="t" id="iLot" placeholder="Ex : Plâtrerie — Entreprise X" list="dlLots">
 
-    <label class="f">Description de la réserve</label>
-    <textarea class="t" id="rDesc" placeholder="Décris le défaut… (appuie sur 🎤 du clavier pour dicter)"></textarea>
+    <label class="f" id="iDescL">Description</label>
+    <textarea class="t" id="iDesc" placeholder="Décris le point… (le micro du clavier permet de dicter)"></textarea>
 
-    <label class="f">Gravité</label>
-    <div class="seg" id="rGrav">
-      <button data-v="mineure" class="mineure">Mineure</button>
-      <button data-v="majeure" class="majeure">Majeure</button>
-      <button data-v="bloquante" class="bloquante">Bloquante</button>
+    <div id="iPtFields">
+      <label class="f">Type</label>
+      <div class="seg" id="iType">
+        <button data-v="afaire" class="afaire">À faire</button>
+        <button data-v="qualite" class="qualite">Qualité</button>
+        <button data-v="securite" class="securite">Sécurité</button>
+        <button data-v="info" class="info">Info</button>
+      </div>
+      <label class="f">Priorité</label>
+      <div class="seg" id="iPrio">
+        <button data-v="normale" class="normale">Normale</button>
+        <button data-v="urgente" class="urgente">Urgente</button>
+      </div>
+      <label class="f">Statut</label>
+      <div class="seg" id="iStatutP">
+        <button data-v="ouvert" class="ouvert">Ouvert</button>
+        <button data-v="fait" class="fait">Fait / soldé</button>
+      </div>
+      <div class="grid2" style="margin-top:14px">
+        <div><label class="f">Échéance</label><input class="t" id="iEcheance" type="date"></div>
+        <div><label class="f">Soldé le</label><input class="t" id="iDateFait" type="date"></div>
+      </div>
+      <p class="hint" id="iVisiteInfo"></p>
+      <button class="btn-ghost bleu" id="iToRes">→ Reporter en réserve OPR</button>
     </div>
 
-    <label class="f">Statut</label>
-    <div class="seg statut" id="rStatut">
-      <button data-v="lever" class="lever">À lever</button>
-      <button data-v="levee" class="levee">Levée</button>
-    </div>
-
-    <div class="grid2" style="margin-top:14px">
-      <div><label class="f" style="margin-top:0">Délai de levée</label><input class="t" id="rDelai" placeholder="Ex : 15 j ou date"></div>
-      <div><label class="f" style="margin-top:0">Date levée</label><input class="t" id="rDateLevee" type="date"></div>
+    <div id="iResFields">
+      <label class="f">Gravité</label>
+      <div class="seg" id="iGrav">
+        <button data-v="mineure" class="mineure">Mineure</button>
+        <button data-v="majeure" class="majeure">Majeure</button>
+        <button data-v="bloquante" class="bloquante">Bloquante</button>
+      </div>
+      <label class="f">Statut</label>
+      <div class="seg" id="iStatutR">
+        <button data-v="lever" class="lever">À lever</button>
+        <button data-v="levee" class="levee">Levée</button>
+      </div>
+      <div class="grid2" style="margin-top:14px">
+        <div><label class="f">Délai de levée</label><input class="t" id="iDelai" placeholder="Ex : 15 j ou date"></div>
+        <div><label class="f">Levée le</label><input class="t" id="iDateLevee" type="date"></div>
+      </div>
     </div>
   </div>
-  <div class="sheet-foot">
-    <button class="btn-primary" id="rSave">Enregistrer la réserve</button>
-  </div>
+  <div class="sheet-foot"><button class="btn-primary" id="iSave">Enregistrer</button></div>
 </div>
 
 <!-- ===== Feuille chantier ===== -->
 <div class="sheet-bg" id="bgChantier"></div>
-<div class="sheet" id="sheetChantier">
+<div class="sheet" id="shChantier" role="dialog">
   <div class="sheet-head">
-    <button class="linkbtn" id="cCancel">Fermer</button>
-    <span class="ttl">Infos chantier</span>
-    <span style="width:54px"></span>
+    <button class="linkbtn" id="cCancel">Annuler</button>
+    <span class="ttl" id="cTitre">Infos chantier</span>
+    <span class="linkbtn r"></span>
   </div>
   <div class="sheet-body">
-    <label class="f">Nom / opération</label><input class="t" id="cNom" placeholder="Ex : Réhabilitation 12 rue X">
+    <label class="f">Nom / opération</label><input class="t" id="cNom" placeholder="Ex : Aménagement bureaux 2e étage">
     <label class="f">Adresse</label><input class="t" id="cAdresse" placeholder="Adresse du chantier">
-    <div class="grid2">
-      <div><label class="f">Date OPR</label><input class="t" id="cDate" type="date"></div>
-      <div><label class="f">Référence</label><input class="t" id="cRef" placeholder="N° marché / lot"></div>
+    <div class="grid2" style="margin-top:14px">
+      <div><label class="f">Référence</label><input class="t" id="cRef" placeholder="N° d'affaire / marché"></div>
+      <div><label class="f">Maître d'ouvrage</label><input class="t" id="cMoa" placeholder="MOA / client"></div>
     </div>
-    <label class="f">Maître d'ouvrage (MOA)</label><input class="t" id="cMoa" placeholder="MOA">
-    <label class="f">Maîtrise d'œuvre (MOE)</label><input class="t" id="cMoe" placeholder="MOE / architecte">
-    <label class="f">Présents (visite)</label><textarea class="t" id="cPresents" placeholder="Ex : N. Berger, Fadi (Gobelins), entreprises présentes…" style="min-height:70px"></textarea>
+    <label class="f">Maîtrise d'œuvre</label><input class="t" id="cMoe" placeholder="MOE / architecte">
+    <label class="f">Entreprises / lots</label>
+    <textarea class="t" id="cEntreprises" placeholder="Une par ligne, ex :&#10;Plâtrerie — Entreprise X&#10;Électricité — Entreprise Y"></textarea>
+    <p class="hint">Les entreprises sont proposées à la saisie et listées en diffusion sur les comptes rendus.</p>
   </div>
   <div class="sheet-foot"><button class="btn-primary" id="cSave">Enregistrer</button></div>
 </div>
 
-<!-- ===== Feuille menu ===== -->
-<div class="sheet-bg" id="bgMenu"></div>
-<div class="sheet" id="sheetMenu">
-  <div class="sheet-head"><span class="ttl">Menu</span><div class="sp" style="flex:1"></div><button class="linkbtn" id="mCancel">Fermer</button></div>
-  <div class="sheet-body">
-    <div class="menu-item" id="mExportPV"><span class="ic">📄</span><div>Exporter le PV en PDF<small>Aperçu d'impression → Partager → Enregistrer en PDF</small></div></div>
-    <div class="menu-item" id="mAddPlan"><span class="ic">🗺️</span><div>Importer un plan<small>Photo du plan ou capture d'écran d'un PDF</small></div></div>
-    <div class="menu-item" id="mBackup"><span class="ic">💾</span><div>Sauvegarder (fichier .json)<small>Copie de secours : réserves, photos et plans</small></div></div>
-    <div class="menu-item" id="mRestore"><span class="ic">↥</span><div>Restaurer une sauvegarde<small>Recharge un fichier .json exporté</small></div></div>
-    <input type="file" id="mRestoreFile" accept="application/json,.json" hidden>
-    <div class="menu-item" id="mCsv"><span class="ic">📊</span><div>Exporter en CSV (Excel)<small>Tableau des réserves sans les photos</small></div></div>
-    <div class="menu-item danger" id="mReset"><span class="ic">🗑️</span><div>Nouvelle OPR (tout effacer)<small>Repart de zéro — sauvegarde d'abord !</small></div></div>
-    <p class="hint" id="storeInfo"></p>
+<!-- ===== Feuille visite ===== -->
+<div class="sheet-bg" id="bgVisite"></div>
+<div class="sheet" id="shVisite" role="dialog">
+  <div class="sheet-head">
+    <button class="linkbtn" id="vCancel">Annuler</button>
+    <span class="ttl" id="vTitre">Visite</span>
+    <button class="linkbtn danger r" id="vDelete">Suppr.</button>
   </div>
-  <div class="sheet-foot"><button class="btn-ghost" id="mClose2">Fermer</button></div>
+  <div class="sheet-body">
+    <div class="vchips" id="vChips"></div>
+    <div class="grid2">
+      <div><label class="f">Date de la visite</label><input class="t" id="vDate" type="date"></div>
+      <div><label class="f">Météo</label><input class="t" id="vMeteo" placeholder="Ex : Ensoleillé" list="dlMeteo"></div>
+    </div>
+    <label class="f">Effectifs sur site</label><input class="t" id="vEffectifs" placeholder="Ex : Plâtrerie 3, Électricité 2">
+    <label class="f">Présents</label><textarea class="t" id="vPresents" style="min-height:64px" placeholder="Personnes présentes à la visite"></textarea>
+    <label class="f">Avancement général</label><textarea class="t" id="vAvancement" placeholder="Avancement par lot, faits marquants, décisions, points d'attention…"></textarea>
+    <label class="f">Prochaine visite</label><input class="t" id="vProchaine" type="date">
+  </div>
+  <div class="sheet-foot"><button class="btn-primary" id="vSave">Enregistrer la visite</button></div>
 </div>
 
-<div class="toast" id="toast"></div>
+<!-- ===== Feuille OPR ===== -->
+<div class="sheet-bg" id="bgOpr"></div>
+<div class="sheet" id="shOpr" role="dialog">
+  <div class="sheet-head">
+    <button class="linkbtn" id="oCancel">Annuler</button>
+    <span class="ttl">Séance d'OPR</span>
+    <span class="linkbtn r"></span>
+  </div>
+  <div class="sheet-body">
+    <label class="f">Date des OPR</label><input class="t" id="oDate" type="date">
+    <label class="f">Présents</label><textarea class="t" id="oPresents" style="min-height:70px" placeholder="MOA, MOE, entreprises présentes…"></textarea>
+    <label class="f">Observations générales</label><textarea class="t" id="oObs" placeholder="Remarques d'ensemble, documents à remettre (DOE, DIUO…), suite donnée…"></textarea>
+  </div>
+  <div class="sheet-foot"><button class="btn-primary" id="oSave">Enregistrer</button></div>
+</div>
+
+<!-- ===== Feuille rédacteur ===== -->
+<div class="sheet-bg" id="bgMoi"></div>
+<div class="sheet" id="shMoi" role="dialog">
+  <div class="sheet-head">
+    <button class="linkbtn" id="mCancel">Annuler</button>
+    <span class="ttl">Rédacteur des documents</span>
+    <span class="linkbtn r"></span>
+  </div>
+  <div class="sheet-body">
+    <label class="f">Nom</label><input class="t" id="mNom" placeholder="Prénom Nom">
+    <label class="f">Fonction</label><input class="t" id="mFonction" placeholder="Ex : Conducteur de travaux">
+    <label class="f">Société</label><input class="t" id="mSociete" placeholder="Nom de l'entreprise">
+    <p class="hint">Affiché en tête des comptes rendus et des PV. Reste sur cet appareil.</p>
+  </div>
+  <div class="sheet-foot"><button class="btn-primary" id="mSave">Enregistrer</button></div>
+</div>
+
+<!-- ===== Feuille menu (contenu dynamique) ===== -->
+<div class="sheet-bg" id="bgMenu"></div>
+<div class="sheet" id="shMenu" role="dialog">
+  <div class="sheet-head"><span class="linkbtn"></span><span class="ttl" id="menuTitre">Menu</span><button class="linkbtn r" id="menuClose">Fermer</button></div>
+  <div class="sheet-body" id="menuBody"></div>
+</div>
+
+<datalist id="dlNiveaux"></datalist><datalist id="dlLocaux"></datalist><datalist id="dlEmpl"></datalist><datalist id="dlLots"></datalist>
+<datalist id="dlMeteo"><option value="Ensoleillé"><option value="Nuageux"><option value="Couvert"><option value="Pluie"><option value="Vent fort"><option value="Gel"><option value="Neige"><option value="Forte chaleur"></datalist>
+
+<div class="toast" id="toast" role="status"></div>
 <div id="pv"></div>
 
 <script>
 "use strict";
-/* ============================================================
-   OPR · Réserves — V2 (liste + plan annoté). Hors-ligne, local.
-   ============================================================ */
+/* ==================================================================
+   OPR Chantier — V3 : plusieurs chantiers, suivi de chantier (visites,
+   points, comptes rendus) + OPR (réserves, PV). Hors ligne, données
+   stockées sur l'appareil uniquement (IndexedDB).
+   ================================================================== */
+const VERSION = '3.0';
 
-/* ---------- IndexedDB ---------- */
+/* ---------- IndexedDB (clé → valeur) ---------- */
 const IDB = (() => {
   let dbp;
   function open(){
@@ -385,160 +534,403 @@ const IDB = (() => {
     });
     return dbp;
   }
-  async function get(k){ const db=await open(); return new Promise((res,rej)=>{ const t=db.transaction('kv','readonly').objectStore('kv').get(k); t.onsuccess=()=>res(t.result); t.onerror=()=>rej(t.error); }); }
-  async function set(k,v){ const db=await open(); return new Promise((res,rej)=>{ const t=db.transaction('kv','readwrite').objectStore('kv').put(v,k); t.onsuccess=()=>res(true); t.onerror=()=>rej(t.error); }); }
-  return {get,set};
+  function run(mode, fn){ return open().then(db=>new Promise((res,rej)=>{ const t=fn(db.transaction('kv',mode).objectStore('kv')); t.onsuccess=()=>res(t.result); t.onerror=()=>rej(t.error); })); }
+  return {
+    get: k => run('readonly', s=>s.get(k)),
+    set: (k,v) => run('readwrite', s=>s.put(v,k)),
+    del: k => run('readwrite', s=>s.delete(k)),
+  };
 })();
 
-/* ---------- État ---------- */
-let state = { chantier:{}, reserves:[], plans:[], seq:0 };
-let filtre='all', editId=null, draftPhotos=[], draftPlanRef=null;
-let currentView='liste', currentPlanId=null;
-
-async function load(){
-  const s = await IDB.get('state');
-  if(s && typeof s==='object'){ state = Object.assign({chantier:{},reserves:[],plans:[],seq:0}, s); }
-  if(!Array.isArray(state.plans)) state.plans=[];
-  if(state.plans.length) currentPlanId = state.plans[0].id;
-}
-let saveTimer=null;
-function persist(){ clearTimeout(saveTimer); saveTimer=setTimeout(()=>{ IDB.set('state',state).catch(()=>toast('⚠️ Sauvegarde locale échouée')); },150); }
-
-/* ---------- Utils ---------- */
+/* ---------- Utilitaires ---------- */
 const $ = s => document.querySelector(s);
-const esc = s => (s==null?'':String(s)).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-const numRes = n => 'R'+String(n).padStart(3,'0');
-let uid=0; const newId = p => p+(state.seq)+'_'+(uid++)+'_'+Math.floor(performance.now());
-function toast(m){ const t=$('#toast'); t.textContent=m; t.classList.add('on'); clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove('on'),1900); }
-function frDate(iso){ if(!iso) return ''; const p=iso.split('-'); return p.length===3? `${p[2]}/${p[1]}/${p[0]}`:iso; }
-function gravClass(r){ return r.statut==='levee'?'levee':(r.gravite||'mineure'); }
+const $$ = s => [...document.querySelectorAll(s)];
+const esc = s => (s==null?'':String(s)).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const pad = (n,l=2) => String(n).padStart(l,'0');
+const genId = p => p + Date.now().toString(36) + Math.random().toString(36).slice(2,8);
+function todayISO(){ const d=new Date(); return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()); }
+function frDate(iso){ if(!iso) return ''; const p=String(iso).split('-'); return p.length===3? `${p[2]}/${p[1]}/${p[0]}`:iso; }
+function longDate(iso){ if(!iso) return ''; const d=new Date(iso+'T12:00:00'); if(isNaN(d)) return frDate(iso);
+  return d.toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long',year:'numeric'}); }
+function toast(m){ const t=$('#toast'); t.textContent=m; t.classList.add('on'); clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove('on'),2200); }
+const uniq = a => [...new Set(a.filter(Boolean))];
+function slug(s){ return (String(s||'chantier').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'').slice(0,40))||'chantier'; }
 
-/* ---------- Compression image ---------- */
-function compress(file, max, q){
-  return new Promise(resolve=>{
-    const img=new Image(); const url=URL.createObjectURL(file);
-    img.onload=()=>{ let {width:w,height:h}=img;
-      if(w>h && w>max){ h=Math.round(h*max/w); w=max; } else if(h>=w && h>max){ w=Math.round(w*max/h); h=max; }
-      const c=document.createElement('canvas'); c.width=w; c.height=h; c.getContext('2d').drawImage(img,0,0,w,h);
-      URL.revokeObjectURL(url); resolve(c.toDataURL('image/jpeg',q));
-    };
-    img.onerror=()=>{ URL.revokeObjectURL(url); resolve(null); };
-    img.src=url;
+/* ---------- Modèle ---------- */
+const MODS = {
+  suivi:{ pre:'P', mot:'point', Mot:'Point', arr:c=>c.suivi.points },
+  opr:  { pre:'R', mot:'réserve', Mot:'Réserve', arr:c=>c.opr.reserves },
+};
+const TYPES = {afaire:'À faire', qualite:'Qualité', securite:'Sécurité', info:'Info'};
+const label = (mod,it) => MODS[mod].pre + pad(it.num||0,3);
+
+function newChantier(){
+  return { id:genId('c'), v:3, nom:'', adresse:'', ref:'', moa:'', moe:'', entreprises:'',
+    created:todayISO(), updated:Date.now(), lastModule:'suivi', plans:[],
+    opr:{date:'', presents:'', obs:'', seq:0, reserves:[]},
+    suivi:{seq:0, vseq:0, cur:null, visites:[], points:[]} };
+}
+
+/* Nettoyage de toute donnée venant d'un fichier ou d'une ancienne version (entrée non fiable). */
+const S = (v,max=8000) => v==null ? '' : String(v).slice(0,max);
+const D = v => /^\d{4}-\d{2}-\d{2}$/.test(String(v||'')) ? String(v) : '';
+const N = v => Number.isFinite(+v) ? +v : 0;
+const ID = (v,p) => { const s=String(v||'').replace(/[^\w-]/g,'').slice(0,64); return s || genId(p); };
+const ONE = (v,list,def) => list.includes(v) ? v : def;
+const IMG = v => typeof v==='string' && /^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/.test(v);
+const PCT = v => (v==null || v==='' || !Number.isFinite(+v)) ? null : Math.max(0,Math.min(100,+v));
+function cleanBase(o){
+  o=o||{};
+  const planId=o.planId!=null && o.planId!=='' ? ID(o.planId,'p') : null, px=PCT(o.px), py=PCT(o.py);
+  return { id:ID(o.id,'i'), num:N(o.num), niveau:S(o.niveau,200), local:S(o.local,200), empl:S(o.empl,300), lot:S(o.lot,300),
+    desc:S(o.desc), photos:Array.isArray(o.photos)?o.photos.filter(IMG).slice(0,30):[], created:D(o.created),
+    planId:(planId && px!=null && py!=null)?planId:null, px:(planId&&px!=null&&py!=null)?px:null, py:(planId&&px!=null&&py!=null)?py:null };
+}
+function cleanReserve(o){ const b=cleanBase(o);
+  return Object.assign(b,{ gravite:ONE(o.gravite,['mineure','majeure','bloquante'],'mineure'), statut:ONE(o.statut,['lever','levee'],'lever'),
+    delai:S(o.delai,100), dateLevee:D(o.dateLevee), fromPoint:o.fromPoint?ID(o.fromPoint,'i'):'' }); }
+function cleanPoint(o){ const b=cleanBase(o);
+  return Object.assign(b,{ type:ONE(o.type,Object.keys(TYPES),'afaire'), prio:ONE(o.prio,['normale','urgente'],'normale'),
+    statut:ONE(o.statut,['ouvert','fait'],'ouvert'), echeance:D(o.echeance), dateFait:D(o.dateFait),
+    visiteId:o.visiteId?ID(o.visiteId,'v'):'', doneVisiteId:o.doneVisiteId?ID(o.doneVisiteId,'v'):'', reserveId:o.reserveId?ID(o.reserveId,'i'):'' }); }
+function cleanVisite(o){ o=o||{};
+  return { id:ID(o.id,'v'), num:N(o.num), date:D(o.date), meteo:S(o.meteo,100), effectifs:S(o.effectifs,500),
+    presents:S(o.presents,2000), avancement:S(o.avancement), prochaine:D(o.prochaine) }; }
+function cleanChantier(o){
+  o=o||{}; const c=newChantier();
+  c.id=ID(o.id,'c'); c.nom=S(o.nom,200); c.adresse=S(o.adresse,300); c.ref=S(o.ref,200); c.moa=S(o.moa,300); c.moe=S(o.moe,300);
+  c.entreprises=S(o.entreprises,4000); c.created=D(o.created)||todayISO(); c.updated=N(o.updated)||Date.now();
+  c.lastModule=ONE(o.lastModule,['suivi','opr'],'suivi');
+  c.plans=(Array.isArray(o.plans)?o.plans:[]).filter(p=>p&&IMG(p.img)).map(p=>({id:ID(p.id,'p'),nom:S(p.nom,100)||'Plan',img:p.img}));
+  const op=o.opr||{}, su=o.suivi||{};
+  c.opr={ date:D(op.date), presents:S(op.presents,2000), obs:S(op.obs), reserves:(Array.isArray(op.reserves)?op.reserves:[]).map(cleanReserve), seq:0 };
+  c.opr.seq=Math.max(N(op.seq), ...c.opr.reserves.map(r=>r.num), 0);
+  c.suivi={ visites:(Array.isArray(su.visites)?su.visites:[]).map(cleanVisite), points:(Array.isArray(su.points)?su.points:[]).map(cleanPoint), seq:0, vseq:0, cur:null };
+  c.suivi.seq=Math.max(N(su.seq), ...c.suivi.points.map(p=>p.num), 0);
+  c.suivi.vseq=Math.max(N(su.vseq), ...c.suivi.visites.map(v=>v.num), 0);
+  const cur=su.cur && c.suivi.visites.find(v=>v.id===su.cur);
+  c.suivi.cur = cur ? cur.id : (c.suivi.visites.length ? c.suivi.visites[c.suivi.visites.length-1].id : null);
+  return c;
+}
+/* Ancienne version (V1/V2 : une seule OPR) → un chantier V3 */
+function fromLegacy(o){
+  const oc=o.chantier||{};
+  return cleanChantier({ nom:oc.nom||'Chantier (OPR reprise)', adresse:oc.adresse, ref:oc.ref, moa:oc.moa, moe:oc.moe,
+    lastModule:'opr', plans:o.plans, opr:{date:oc.date, presents:oc.presents, seq:o.seq, reserves:o.reserves} });
+}
+
+/* ---------- État ---------- */
+let idx = { v:3, chantiers:[], settings:{} };   // index : résumé de chaque chantier (sans photos)
+let ch = null;                                   // chantier ouvert (complet)
+const ui = { module:'suivi', view:'liste', filtre:{suivi:'ouverts', opr:'all'}, lot:'', planId:null };
+let edit = null;                                 // {mod, id, photos, planRef}
+
+function summary(c){
+  const ouverts=c.suivi.points.filter(p=>p.statut!=='fait');
+  const lastV=c.suivi.visites.reduce((m,v)=>(!m||v.num>m.num)?v:m,null);
+  return { id:c.id, nom:c.nom, adresse:c.adresse, updated:c.updated, ouverts:ouverts.length,
+    echeances:ouverts.map(p=>p.echeance).filter(Boolean), nbRes:c.opr.reserves.length,
+    aLever:c.opr.reserves.filter(r=>r.statut!=='levee').length, nbPoints:c.suivi.points.length,
+    derniere: lastV?{num:lastV.num,date:lastV.date}:null, oprDate:c.opr.date };
+}
+async function saveIdx(){ await IDB.set('idx', idx); }
+let saveT=null, saving=Promise.resolve();
+function persist(){ if(!ch) return; ch.updated=Date.now(); clearTimeout(saveT); saveT=setTimeout(flush,200); }
+function flush(){
+  clearTimeout(saveT); saveT=null; if(!ch) return saving;
+  const c=ch;
+  saving = saving.then(async()=>{
+    try{
+      await IDB.set('ch:'+c.id, c);
+      const s=summary(c), i=idx.chantiers.findIndex(x=>x.id===c.id);
+      if(i>=0) idx.chantiers[i]=s; else idx.chantiers.push(s);
+      await saveIdx(); askPersist();
+    }catch(e){ toast('⚠️ Enregistrement impossible (stockage plein ?)'); }
   });
+  return saving;
+}
+let persistAsked=false;
+function askPersist(){ if(persistAsked) return; persistAsked=true; try{ navigator.storage && navigator.storage.persist && navigator.storage.persist(); }catch(e){} }
+document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='hidden' && saveT) flush(); });
+window.addEventListener('pagehide',()=>{ if(saveT) flush(); });
+
+async function boot(){
+  let i=null;
+  try{ i=await IDB.get('idx'); }catch(e){ toast('⚠️ Stockage indisponible sur ce navigateur'); }
+  if(!i || !Array.isArray(i.chantiers)){
+    i={v:3, chantiers:[], settings:{}};
+    try{
+      const old=await IDB.get('state');   // données V1/V2 : conservées telles quelles sous « state »
+      if(old && (Array.isArray(old.reserves)&&old.reserves.length || Array.isArray(old.plans)&&old.plans.length || old.chantier&&old.chantier.nom)){
+        const c=fromLegacy(old); await IDB.set('ch:'+c.id,c); i.chantiers.push(summary(c));
+      }
+    }catch(e){}
+    try{ await IDB.set('idx',i); }catch(e){}
+  }
+  idx={ v:3, chantiers:i.chantiers.filter(x=>x&&x.id), settings:Object.assign({nom:'',fonction:'',societe:''}, i.settings||{}) };
+  const last=sessionGet('ouvert');
+  if(last && idx.chantiers.some(x=>x.id===last)) await openChantier(last,true); else showHome();
+}
+function sessionGet(k){ try{ return sessionStorage.getItem('opr.'+k); }catch(e){ return null; } }
+function sessionSet(k,v){ try{ v==null?sessionStorage.removeItem('opr.'+k):sessionStorage.setItem('opr.'+k,v); }catch(e){} }
+function localGet(k){ try{ return localStorage.getItem('opr.'+k); }catch(e){ return null; } }
+function localSet(k,v){ try{ localStorage.setItem('opr.'+k,v); }catch(e){} }
+
+/* ======================= ACCUEIL ======================= */
+async function showHome(){
+  if(ch){ await flush(); }
+  ch=null; sessionSet('ouvert',null); closeAllSheets();
+  $('#vHome').hidden=false; $('#vCh').hidden=true; $('#chHead').hidden=true; $('#fab').hidden=true;
+  $('#btnBack').hidden=true; $('#ctitle').hidden=true; $('#btnExport').hidden=true; $('#logo').hidden=false; $('#hsp').hidden=false;
+  document.title='OPR Chantier';
+  renderHome(); window.scrollTo(0,0);
+}
+function renderHome(){
+  const today=todayISO();
+  const list=[...idx.chantiers].sort((a,b)=>(b.updated||0)-(a.updated||0));
+  $('#chList').innerHTML = list.length ? list.map(s=>{
+    const retard=(s.echeances||[]).filter(d=>d<today).length;
+    const tags=[];
+    if(s.ouverts) tags.push(`<span class="tag terra">${s.ouverts} point${s.ouverts>1?'s':''} ouvert${s.ouverts>1?'s':''}</span>`);
+    if(retard) tags.push(`<span class="tag rouge">${retard} en retard</span>`);
+    if(s.nbRes) tags.push(`<span class="tag ${s.aLever?'bleu':'vert'}">${s.aLever? s.aLever+' réserve'+(s.aLever>1?'s':'')+' à lever' : 'Réserves toutes levées'}</span>`);
+    if(!tags.length) tags.push('<span class="tag">Rien en cours</span>');
+    const meta = s.derniere ? `Dernière visite : n°${s.derniere.num}${s.derniere.date?' du '+frDate(s.derniere.date):''}` : (s.oprDate?`OPR du ${frDate(s.oprDate)}`:'Aucune visite');
+    return `<button class="ccard" data-id="${esc(s.id)}"><div class="cc-nom">${esc(s.nom||'(chantier sans nom)')}</div>
+      ${s.adresse?`<div class="cc-adr">${esc(s.adresse)}</div>`:''}<div class="cc-tags">${tags.join('')}</div><div class="cc-meta">${meta}</div></button>`;
+  }).join('') : `<div class="vide-msg"><div class="big">🏗️</div>Aucun chantier pour l'instant.<br>Crée ton premier chantier pour suivre tes visites et faire tes OPR.</div>`;
+  $$('#chList .ccard').forEach(b=>b.onclick=()=>openChantier(b.dataset.id));
+  $('#homeNote').textContent=`Données enregistrées sur cet appareil uniquement · version ${VERSION}`;
+  renderInstall();
 }
 
-/* ---------- Rendu liste ---------- */
-function matchFiltre(r){
-  if(filtre==='all') return true;
-  if(filtre==='lever') return r.statut!=='levee';
-  if(filtre==='levee') return r.statut==='levee';
-  return r.gravite===filtre;
+/* ---------- Installation ---------- */
+let installEvt=null;
+const isStandalone = () => matchMedia('(display-mode: standalone)').matches || navigator.standalone===true;
+const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform==='MacIntel' && navigator.maxTouchPoints>1);
+window.addEventListener('beforeinstallprompt', e=>{ e.preventDefault(); installEvt=e; if(!ch) renderInstall(); });
+window.addEventListener('appinstalled', ()=>{ installEvt=null; toast('Application installée ✓'); if(!ch) renderInstall(); });
+function renderInstall(){
+  const box=$('#installCard');
+  if(isStandalone() || localGet('hideInstall')==='1'){ box.innerHTML=''; return; }
+  let tx='';
+  if(installEvt) tx=`<b>Installer l'application</b>Une icône sur ton bureau ou ton écran d'accueil, une fenêtre à part, et ça marche sans réseau.<div style="margin-top:8px"><button class="btn-sm" id="doInstall">Installer</button></div>`;
+  else if(isIOS) tx=`<b>Installer sur l'iPhone</b>Dans Safari, touche <b style="display:inline">Partager ⬆︎</b> puis <b style="display:inline">« Sur l'écran d'accueil »</b>.`;
+  else tx=`<b>Installer sur ce PC</b>Dans Edge : menu <b style="display:inline">⋯</b> → <b style="display:inline">Applications</b> → <b style="display:inline">Installer ce site en tant qu'application</b> (ou l'icône ⊕ dans la barre d'adresse).`;
+  box.innerHTML=`<div class="install"><img src="icons/icon.svg" alt=""><div class="tx">${tx}</div><button class="x" id="hideInstall" title="Masquer">×</button></div>`;
+  $('#hideInstall').onclick=()=>{ localSet('hideInstall','1'); renderInstall(); };
+  const b=$('#doInstall'); if(b) b.onclick=async()=>{ const e=installEvt; installEvt=null; e.prompt(); try{ await e.userChoice; }catch(_){} renderInstall(); };
 }
+
+/* ======================= CHANTIER ======================= */
+async function openChantier(id, silent){
+  if(ch) await flush();
+  let c=null;
+  try{ c=await IDB.get('ch:'+id); }catch(e){}
+  if(!c){ if(!silent) toast('Chantier introuvable'); idx.chantiers=idx.chantiers.filter(x=>x.id!==id); await saveIdx(); return showHome(); }
+  ch=cleanChantier(c); closeAllSheets(); setPlacing(false);
+  ui.module=ch.lastModule||'suivi'; ui.view='liste'; ui.lot=''; ui.planId=ch.plans[0]?ch.plans[0].id:null; view._init=false;
+  sessionSet('ouvert',ch.id);
+  $('#vHome').hidden=true; $('#vCh').hidden=false; $('#chHead').hidden=false;
+  $('#btnBack').hidden=false; $('#ctitle').hidden=false; $('#btnExport').hidden=false; $('#logo').hidden=true; $('#hsp').hidden=true;
+  if(!silent){ try{ history.pushState({c:ch.id},''); }catch(e){} }
+  render(); window.scrollTo(0,0);
+}
+window.addEventListener('popstate',()=>{ if(anySheetOpen()){ closeAllSheets(); return; } if(ch) showHome(); });
+
+function curVisite(){ return ch.suivi.visites.find(v=>v.id===ch.suivi.cur) || null; }
+function visiteById(id){ return ch.suivi.visites.find(v=>v.id===id) || null; }
+function lotsConnus(){
+  const fromCh=(ch.entreprises||'').split(/\r?\n/).map(s=>s.trim());
+  return uniq([...fromCh, ...ch.suivi.points.map(p=>p.lot), ...ch.opr.reserves.map(r=>r.lot)]);
+}
+function estRetard(p){ return p.statut!=='fait' && p.echeance && p.echeance<todayISO(); }
+
+function matchFiltre(it){
+  if(ui.lot && it.lot!==ui.lot) return false;
+  const f=ui.filtre[ui.module];
+  if(ui.module==='opr'){
+    if(f==='lever') return it.statut!=='levee';
+    if(f==='levee') return it.statut==='levee';
+    if(f==='bloquante'||f==='majeure') return it.gravite===f;
+    return true;
+  }
+  const cv=ch.suivi.cur;
+  if(f==='ouverts') return it.statut!=='fait';
+  if(f==='visite') return it.visiteId===cv || it.doneVisiteId===cv;
+  if(f==='retard') return estRetard(it);
+  if(f==='urgents') return it.statut!=='fait' && it.prio==='urgente';
+  if(f==='securite') return it.type==='securite';
+  if(f==='faits') return it.statut==='fait';
+  return true;
+}
+const FILTRES = {
+  suivi:[['ouverts','Ouverts'],['visite','Cette visite'],['retard','En retard'],['urgents','Urgents'],['securite','Sécurité'],['faits','Soldés'],['tous','Tous']],
+  opr:[['all','Toutes'],['lever','À lever'],['levee','Levées'],['bloquante','Bloquantes'],['majeure','Majeures']],
+};
+
 function render(){
-  const c=state.chantier||{};
-  const bar=$('#chantierBar'), titre=$('#chantierTitre');
-  if(c.nom){ bar.classList.remove('vide'); titre.textContent=c.nom+(c.date?' · '+frDate(c.date):''); }
-  else { bar.classList.add('vide'); titre.textContent='Renseigner le chantier'; }
-  const tot=state.reserves.length, lev=state.reserves.filter(r=>r.statut==='levee').length;
-  $('#sTotal').textContent=tot; $('#sLever').textContent=tot-lev; $('#sLevee').textContent=lev;
+  if(!ch) return;
+  const m=ui.module, today=todayISO();
+  document.title=(ch.nom||'Chantier')+' — OPR Chantier';
+  $('#ctN').textContent=ch.nom||'(chantier sans nom)';
+  $('#ctA').textContent=ch.adresse||'Toucher pour renseigner le chantier';
+  $$('.modseg button').forEach(b=>b.classList.toggle('on',b.dataset.m===m));
 
-  // bascule vue
-  const planMode = currentView==='plan';
-  $('#planView').classList.toggle('on', planMode);
-  $('#filtres').style.display = planMode?'none':'flex';
-  $('#liste').style.display = planMode?'none':'block';
-  $('#fabAdd').style.display = planMode?'none':'flex';
-  $('#tabListe').classList.toggle('on', !planMode);
-  $('#tabPlan').classList.toggle('on', planMode);
-  if(planMode){ renderPlan(); return; }
+  // barre de contexte
+  const bar=$('#ctxBar');
+  if(m==='suivi'){
+    const v=curVisite();
+    bar.classList.toggle('vide',!v);
+    $('#ctxT').textContent = v ? `Visite n°${v.num}${v.date?' · '+frDate(v.date):''}${v.meteo?' · '+v.meteo:''}` : 'Aucune visite — démarrer la visite n°1';
+    $('#ctxNew').hidden=!v;
+    const pts=ch.suivi.points, ouv=pts.filter(p=>p.statut!=='fait');
+    $('#stats').innerHTML=stat(ouv.length,'Ouverts','terra')+stat(ouv.filter(p=>p.echeance&&p.echeance<today).length,'En retard','rouge')+stat(pts.length-ouv.length,'Soldés','vert');
+  } else {
+    const o=ch.opr;
+    bar.classList.toggle('vide',!o.date);
+    $('#ctxT').textContent = o.date ? `OPR du ${frDate(o.date)}` : 'Renseigner la séance d\'OPR (date, présents)';
+    $('#ctxNew').hidden=true;
+    const rs=o.reserves, lev=rs.filter(r=>r.statut==='levee').length;
+    $('#stats').innerHTML=stat(rs.length,'Réserves','')+stat(rs.length-lev,'À lever','terra')+stat(lev,'Levées','vert');
+  }
 
-  const list=state.reserves.filter(matchFiltre); const box=$('#liste');
-  if(state.reserves.length===0){ box.innerHTML='<div class="vide-msg"><div class="big">📋</div>Aucune réserve.<br>Appuie sur <b>＋ Réserve</b> pour commencer ton OPR.</div>'; refreshDatalists(); return; }
-  if(list.length===0){ box.innerHTML='<div class="vide-msg">Aucune réserve dans ce filtre.</div>'; return; }
-  box.innerHTML=list.map(r=>{
-    const loc=[r.niveau,r.local,r.empl].filter(Boolean).join(' · ');
-    const vign=r.photos&&r.photos[0]?`<img class="vign" src="${r.photos[0]}">`:`<div class="vign">📷</div>`;
-    const np=r.photos?r.photos.length:0;
-    const st=r.statut==='levee'?`<span class="pastille levee"><span class="dot"></span>Levée</span>`:`<span class="pastille lever"><span class="dot"></span>À lever</span>`;
-    return `<div class="carte" data-id="${r.id}">${vign}<div class="body">
-      <div class="l1"><span class="num">${numRes(r.num)}</span><span class="grav ${r.gravite||'mineure'}">${r.gravite||'mineure'}</span><span class="loc">${esc(loc||'—')}</span></div>
-      <div class="desc">${esc(r.desc||'(sans description)')}</div>
-      <div class="l3">${st}${r.lot?`<span>· ${esc(r.lot)}</span>`:''}${r.planId!=null&&r.px!=null?`<span class="pin-badge">📍 plan</span>`:''}${np?`<span class="nbphotos">📷 ${np}</span>`:''}</div>
-    </div></div>`;
-  }).join('');
-  box.querySelectorAll('.carte').forEach(el=>el.onclick=()=>openReserve(el.dataset.id));
+  // filtres
+  const lots=uniq(MODS[m].arr(ch).map(i=>i.lot)).sort((a,b)=>a.localeCompare(b,'fr'));
+  if(ui.lot && !lots.includes(ui.lot)) ui.lot='';
+  $('#filtres').innerHTML = FILTRES[m].map(([k,t])=>`<button class="chip ${ui.filtre[m]===k?'on':''}" data-f="${k}">${t}</button>`).join('')
+    + (lots.length?`<select class="chip ${ui.lot?'on':''}" id="fLot" aria-label="Filtrer par entreprise"><option value="">Toutes entreprises</option>${lots.map(l=>`<option ${l===ui.lot?'selected':''} value="${esc(l)}">${esc(l)}</option>`).join('')}</select>`:'');
+  $$('#filtres button.chip').forEach(b=>b.onclick=()=>{ ui.filtre[m]=b.dataset.f; render(); });
+  const fl=$('#fLot'); if(fl) fl.onchange=()=>{ ui.lot=fl.value; render(); };
+
+  const planMode=ui.view==='plan';
+  $('#tabListe').classList.toggle('on',!planMode); $('#tabPlan').classList.toggle('on',planMode);
+  $('#planView').hidden=!planMode; $('#liste').hidden=planMode;
+  $('#fab').hidden=planMode; $('#fab').textContent='＋ '+MODS[m].Mot;
   refreshDatalists();
+  if(planMode){ renderPlan(); return; }
+  renderListe();
 }
-function uniq(a){ return [...new Set(a.filter(Boolean))]; }
-function refreshDatalists(){ const r=state.reserves;
-  fill('#dlNiveaux',uniq(r.map(x=>x.niveau))); fill('#dlLocaux',uniq(r.map(x=>x.local)));
-  fill('#dlEmpl',uniq(r.map(x=>x.empl))); fill('#dlLots',uniq(r.map(x=>x.lot)));
+function stat(n,l,c){ return `<div class="stat ${c}"><div class="n">${n}</div><div class="l">${l}</div></div>`; }
+
+function renderListe(){
+  const m=ui.module, all=MODS[m].arr(ch), box=$('#liste');
+  if(!all.length){
+    box.innerHTML = m==='suivi'
+      ? `<div class="vide-msg"><div class="big">📝</div>Aucun point de suivi.<br>Pendant ta visite, appuie sur <b>＋ Point</b> : photo, endroit, entreprise, ce qu'il y a à faire.</div>`
+      : `<div class="vide-msg"><div class="big">📋</div>Aucune réserve.<br>Appuie sur <b>＋ Réserve</b> pour commencer tes OPR.</div>`;
+    return;
+  }
+  let list=all.filter(matchFiltre);
+  if(!list.length){ box.innerHTML='<div class="vide-msg">Rien dans ce filtre.</div>'; return; }
+  if(m==='suivi'){
+    list=[...list].sort((a,b)=>(a.statut==='fait')-(b.statut==='fait') || (b.prio==='urgente')-(a.prio==='urgente') || a.num-b.num);
+  } else list=[...list].sort((a,b)=>a.num-b.num);
+  box.innerHTML=list.map(it=>carte(m,it)).join('');
+  $$('#liste .carte').forEach(el=>el.onclick=()=>openItem(m,el.dataset.id));
+}
+function carte(m,it){
+  const loc=[it.niveau,it.local,it.empl].filter(Boolean).join(' · ');
+  const vign=it.photos[0]?`<img class="vign" src="${it.photos[0]}" alt="">`:`<div class="vign">📷</div>`;
+  const np=it.photos.length, plan=it.planId?`<span class="pin-badge">📍 plan</span>`:'';
+  let tag, st, extra='';
+  if(m==='opr'){
+    tag=`<span class="grav ${it.gravite}">${it.gravite}</span>`;
+    st=it.statut==='levee'?`<span class="pastille fait"><span class="dot"></span>Levée${it.dateLevee?' le '+frDate(it.dateLevee):''}</span>`:`<span class="pastille ouvert"><span class="dot"></span>À lever${it.delai?' · '+esc(it.delai):''}</span>`;
+  } else {
+    tag=`<span class="grav ${it.type}">${TYPES[it.type]}</span>`+(it.prio==='urgente'&&it.statut!=='fait'?`<span class="grav urgent">urgent</span>`:'');
+    st=it.statut==='fait'?`<span class="pastille fait"><span class="dot"></span>Soldé${it.dateFait?' le '+frDate(it.dateFait):''}</span>`:`<span class="pastille ouvert"><span class="dot"></span>Ouvert</span>`;
+    if(it.echeance && it.statut!=='fait') extra+=estRetard(it)?`<span class="retard">⚠ échéance ${frDate(it.echeance)}</span>`:`<span>échéance ${frDate(it.echeance)}</span>`;
+    if(it.reserveId){ const r=ch.opr.reserves.find(x=>x.id===it.reserveId); if(r) extra+=`<span class="pin-badge">→ ${label('opr',r)}</span>`; }
+  }
+  const done = m==='opr' ? it.statut==='levee' : it.statut==='fait';
+  return `<button class="carte ${done?'fait':''}" data-id="${esc(it.id)}">${vign}<div class="body">
+    <div class="l1"><span class="num">${label(m,it)}</span>${tag}<span class="loc">${esc(loc||'')}</span></div>
+    <div class="desc">${esc(it.desc||'(sans description)')}</div>
+    <div class="l3">${st}${it.lot?`<span>· ${esc(it.lot)}</span>`:''}${extra}${plan}${np?`<span class="nbphotos">📷 ${np}</span>`:''}</div>
+  </div></button>`;
+}
+function refreshDatalists(){
+  const all=[...ch.suivi.points,...ch.opr.reserves];
+  fill('#dlNiveaux',uniq(all.map(x=>x.niveau))); fill('#dlLocaux',uniq(all.map(x=>x.local)));
+  fill('#dlEmpl',uniq(all.map(x=>x.empl))); fill('#dlLots',lotsConnus());
 }
 function fill(s,v){ $(s).innerHTML=v.map(x=>`<option value="${esc(x)}">`).join(''); }
 
+/* ---------- En-tête / navigation ---------- */
+$('#btnBack').onclick=()=>{ if(history.state&&history.state.c) history.back(); else showHome(); };
+$('#ctitle').onclick=()=>openChantierSheet(false);
+$$('.modseg button').forEach(b=>b.onclick=()=>{ ui.module=b.dataset.m; ch.lastModule=ui.module; ui.lot=''; persist(); render(); });
+$('#tabListe').onclick=()=>{ ui.view='liste'; setPlacing(false); render(); };
+$('#tabPlan').onclick=()=>{ ui.view='plan'; window.scrollTo(0,0); render(); };
+$('#ctxBar').onclick=()=>{ if(ui.module==='suivi'){ curVisite()?openVisite(ch.suivi.cur):newVisite(); } else openOpr(); };
+$('#ctxNew').onclick=()=>newVisite();
+$('#fab').onclick=()=>openItem(ui.module,null);
+$('#btnExport').onclick=()=>{ ui.module==='suivi'?exportCR():exportPV(); };
+$('#hNew').onclick=()=>openChantierSheet(true);
+
 /* ======================= VUE PLAN ======================= */
 const stage=$('#planStage'), canvas=$('#planCanvas'), banner=$('#planBanner');
-let view={s:1,tx:0,ty:0};       // transform courant
-let placing=false;              // mode placement armé
-let placingFor=null;            // id réserve à (re)placer, sinon null = nouvelle
-
-function applyTransform(){
-  canvas.style.transform=`translate(${view.tx}px,${view.ty}px) scale(${view.s})`;
-  canvas.style.setProperty('--inv', 1/view.s);
+const view={s:1,tx:0,ty:0,_init:false};
+let placing=false, placingFor=null;
+function applyTransform(){ canvas.style.transform=`translate(${view.tx}px,${view.ty}px) scale(${view.s})`; canvas.style.setProperty('--inv',1/view.s); }
+function currentPlan(){ return ch.plans.find(p=>p.id===ui.planId)||ch.plans[0]||null; }
+function sizeStage(){
+  if(stage.hidden) return;
+  const top=stage.getBoundingClientRect().top;
+  stage.style.height=Math.max(280, window.innerHeight-Math.max(top,0)-6)+'px';
 }
-function currentPlan(){ return state.plans.find(p=>p.id===currentPlanId)||state.plans[0]||null; }
-
 function renderPlan(){
-  // onglets plans
-  const tabs=$('#planTabs');
-  tabs.innerHTML = state.plans.map(p=>`<button class="chip ${p.id===currentPlanId?'on':''}" data-id="${p.id}">${esc(p.nom)}</button>`).join('')
-    + `<button class="chip" id="planAddTab">＋ plan</button>`;
-  tabs.querySelectorAll('.chip[data-id]').forEach(b=>{
-    b.onclick=()=>{ currentPlanId=b.dataset.id; view._init=false; renderPlan(); };
-    b.oncontextmenu=e=>{ e.preventDefault(); renamePlan(b.dataset.id); };
-  });
+  const tabs=$('#planTabs'), plan=currentPlan();
+  tabs.innerHTML = ch.plans.map(p=>`<button class="chip ${plan&&p.id===plan.id?'on':''}" data-id="${esc(p.id)}">${esc(p.nom)}</button>`).join('')
+    + `<button class="chip" id="planAddTab">＋ Plan</button>` + (plan?`<button class="chip" id="planManage" title="Renommer / supprimer">⋯</button>`:'');
+  $$('#planTabs .chip[data-id]').forEach(b=>b.onclick=()=>{ ui.planId=b.dataset.id; view._init=false; renderPlan(); });
   $('#planAddTab').onclick=()=>$('#planFile').click();
-
-  const plan=currentPlan();
-  if(!plan){ $('#planEmpty').style.display='block'; stage.style.display='none'; tabs.style.display='none'; return; }
-  $('#planEmpty').style.display='none'; stage.style.display='block'; tabs.style.display='flex';
-  currentPlanId=plan.id;
-
-  // image + pins
+  if($('#planManage')) $('#planManage').onclick=()=>managePlan(plan.id);
+  if(!plan){ $('#planEmpty').hidden=false; stage.hidden=true; tabs.hidden=true; return; }
+  $('#planEmpty').hidden=true; stage.hidden=false; tabs.hidden=false; ui.planId=plan.id;
+  sizeStage();
+  const m=ui.module;
   canvas.innerHTML=`<img id="planImg" src="${plan.img}" alt="">`;
   const img=$('#planImg');
-  const pins=state.reserves.filter(r=>r.planId===plan.id && r.px!=null);
-  img.onload=()=>{
-    pins.forEach(r=>{
+  const pins=MODS[m].arr(ch).filter(it=>it.planId===plan.id && it.px!=null && matchFiltre(it));
+  const go=()=>{
+    pins.forEach(it=>{
       const el=document.createElement('button');
-      el.className='pin '+gravClass(r);
-      el.style.left=r.px+'%'; el.style.top=r.py+'%';
-      el.textContent=r.num; el.dataset.id=r.id;
-      el.onclick=ev=>{ ev.stopPropagation(); if(!placing) openReserve(r.id); };
+      el.className='pin '+pinClass(m,it);
+      el.style.left=it.px+'%'; el.style.top=it.py+'%';
+      el.textContent=it.num; el.dataset.id=it.id; el.title=label(m,it)+' — '+(it.desc||'');
       canvas.appendChild(el);
     });
-    if(!view._init){ fitPlan(); }
+    if(!view._init) fitPlan();
   };
-  if(img.complete) img.onload();
+  if(img.complete && img.naturalWidth) go(); else img.onload=go;
   applyTransform();
+}
+function pinClass(m,it){
+  if(m==='opr') return it.statut==='levee'?'fait':it.gravite;
+  if(it.statut==='fait') return 'fait';
+  if(it.prio==='urgente') return 'urgent';
+  return it.type;
 }
 function fitPlan(){
   const img=$('#planImg'); if(!img||!img.naturalWidth) return;
   const sw=stage.clientWidth, sh=stage.clientHeight;
-  const s=Math.min(sw/img.naturalWidth, sh/img.naturalHeight);
+  const s=Math.min(sw/img.naturalWidth, sh/img.naturalHeight)*0.96;
   view.s=s; view.tx=(sw-img.naturalWidth*s)/2; view.ty=(sh-img.naturalHeight*s)/2; view._init=true;
   applyTransform();
 }
 $('#planFit').onclick=fitPlan;
 
-/* --- gestes : pan + pinch + tap --- */
-const ptrs=new Map(); let gesture=null, moved=0, downT=0;
-function midDist(a,b){ const dx=a.x-b.x, dy=a.y-b.y; return {d:Math.hypot(dx,dy), mx:(a.x+b.x)/2, my:(a.y+b.y)/2}; }
+/* gestes : glisser, pincer, molette (PC), toucher */
+const ptrs=new Map(); let gesture=null, moved=0, downT=0, downTarget=null;
+function midDist(a,b){ return {d:Math.hypot(a.x-b.x,a.y-b.y), mx:(a.x+b.x)/2, my:(a.y+b.y)/2}; }
 stage.addEventListener('pointerdown', e=>{
-  stage.setPointerCapture(e.pointerId);
+  if(e.target.closest('.plan-toolbar,.plan-banner')) return;
+  if(ptrs.size===0){ downTarget=e.target; moved=0; downT=performance.now(); }
+  try{ stage.setPointerCapture(e.pointerId); }catch(_){}
   ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});
-  moved=0; downT=performance.now();
-  if(ptrs.size===2){ const [a,b]=[...ptrs.values()]; const m=midDist(a,b); gesture={d0:m.d,s0:view.s,tx0:view.tx,ty0:view.ty,mx:m.mx,my:m.my}; }
+  if(ptrs.size===2){ const [a,b]=[...ptrs.values()]; const md=midDist(a,b); gesture={d0:md.d,s0:view.s,tx0:view.tx,ty0:view.ty,mx:md.mx,my:md.my}; }
   else { const p=[...ptrs.values()][0]; gesture={panx:p.x-view.tx,pany:p.y-view.ty}; }
 });
 stage.addEventListener('pointermove', e=>{
@@ -546,266 +938,563 @@ stage.addEventListener('pointermove', e=>{
   const prev=ptrs.get(e.pointerId); moved+=Math.abs(e.clientX-prev.x)+Math.abs(e.clientY-prev.y);
   ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});
   if(ptrs.size===2 && gesture && gesture.d0){
-    const [a,b]=[...ptrs.values()]; const m=midDist(a,b);
-    const stageRect=stage.getBoundingClientRect();
-    let s=gesture.s0*(m.d/gesture.d0); s=Math.max(0.2,Math.min(10,s));
-    const mx=gesture.mx-stageRect.left, my=gesture.my-stageRect.top;
-    view.tx = mx-((gesture.mx-stageRect.left-gesture.tx0)/gesture.s0)*s;
-    view.ty = my-((gesture.my-stageRect.top -gesture.ty0)/gesture.s0)*s;
-    view.s=s; applyTransform();
+    const [a,b]=[...ptrs.values()]; const md=midDist(a,b), r=stage.getBoundingClientRect();
+    const s=Math.max(0.05,Math.min(12,gesture.s0*(md.d/gesture.d0)));
+    const mx=md.mx-r.left, my=md.my-r.top, ox=(gesture.mx-r.left-gesture.tx0)/gesture.s0, oy=(gesture.my-r.top-gesture.ty0)/gesture.s0;
+    view.tx=mx-ox*s; view.ty=my-oy*s; view.s=s; applyTransform();
   } else if(ptrs.size===1 && gesture && gesture.panx!=null){
     view.tx=e.clientX-gesture.panx; view.ty=e.clientY-gesture.pany; applyTransform();
   }
 });
 function endPtr(e){
-  const wasTap = ptrs.size===1 && moved<10 && (performance.now()-downT)<300;
+  if(!ptrs.has(e.pointerId)) return;
+  const wasTap = ptrs.size===1 && moved<10 && (performance.now()-downT)<450;
   ptrs.delete(e.pointerId);
   if(ptrs.size<2) gesture=null;
   if(ptrs.size===1){ const p=[...ptrs.values()][0]; gesture={panx:p.x-view.tx,pany:p.y-view.ty}; }
-  if(wasTap && ptrs.size===0){ handleTap(e); }
+  if(wasTap && ptrs.size===0) handleTap(e);
 }
 stage.addEventListener('pointerup', endPtr);
 stage.addEventListener('pointercancel', e=>{ ptrs.delete(e.pointerId); if(ptrs.size<2) gesture=null; });
+// au doigt, le « clic » qui suit le toucher retomberait sur la fiche qui vient de s'ouvrir : on le supprime
+stage.addEventListener('touchend', e=>{ if(e.cancelable && !e.target.closest('.plan-toolbar,.plan-banner')) e.preventDefault(); },{passive:false});
+stage.addEventListener('wheel', e=>{
+  e.preventDefault();
+  const r=stage.getBoundingClientRect(), mx=e.clientX-r.left, my=e.clientY-r.top;
+  const s=Math.max(0.05,Math.min(12,view.s*Math.exp(-e.deltaY*0.0015))), f=s/view.s;
+  view.tx=mx-(mx-view.tx)*f; view.ty=my-(my-view.ty)*f; view.s=s; applyTransform();
+},{passive:false});
 
 function handleTap(e){
-  if(e.target.closest('.pin')) return;          // géré par le pin lui-même
-  if(!placing) return;                           // hors mode placement : ne rien créer
+  const pin=downTarget && downTarget.closest && downTarget.closest('.pin');
+  if(pin && !placing){ openItem(ui.module,pin.dataset.id); return; }
+  if(!placing) return;
   const img=$('#planImg'); if(!img) return;
   const rect=img.getBoundingClientRect();
   const fx=(e.clientX-rect.left)/rect.width, fy=(e.clientY-rect.top)/rect.height;
   if(fx<0||fx>1||fy<0||fy>1){ toast('Touche à l\'intérieur du plan'); return; }
   const px=+(fx*100).toFixed(2), py=+(fy*100).toFixed(2);
-  setPlacing(false);
-  if(placingFor){
-    const r=state.reserves.find(x=>x.id===placingFor); placingFor=null;
-    if(r){ r.planId=currentPlanId; r.px=px; r.py=py; persist(); renderPlan(); openReserve(r.id); }
+  const forId=placingFor; setPlacing(false);
+  if(forId){
+    const it=MODS[ui.module].arr(ch).find(x=>x.id===forId);
+    if(it){ it.planId=ui.planId; it.px=px; it.py=py; persist(); renderPlan(); openItem(ui.module,it.id); }
   } else {
-    draftPlanRef={planId:currentPlanId,px,py};
-    openReserve(null,true);
+    openItem(ui.module,null,{planId:ui.planId,px,py});
   }
 }
 function setPlacing(on,forId){
-  placing=on; placingFor=forId||null;
-  banner.classList.toggle('on',on); stage.classList.toggle('placing',on);
-  $('#planPlace').textContent = on?'✕ Annuler le pointage':'＋ Pointer une réserve';
+  placing=!!on; placingFor=on?(forId||null):null;
+  banner.classList.toggle('on',placing); stage.classList.toggle('placing',placing);
+  banner.textContent = 'Touche le plan à l\'endroit exact du '+(ui.module==='opr'?'défaut (réserve)':'point');
+  $('#planPlace').textContent = placing?'✕ Annuler le pointage':'＋ Pointer sur le plan';
 }
 $('#planPlace').onclick=()=>setPlacing(!placing);
 
-/* import plan */
+/* import de plan : image ou PDF */
 $('#planEmptyAdd').onclick=()=>$('#planFile').click();
 $('#planFile').onchange=async e=>{
-  const f=e.target.files[0]; if(!f) return; e.target.value='';
-  toast('Import du plan…');
-  const img=await compress(f,2000,0.72);
-  if(!img){ toast('Image illisible'); return; }
-  const def='Plan '+(state.plans.length+1);
-  const nom=(prompt('Nom du plan (ex : RDC, R+1, Façade) :',def)||def).trim()||def;
-  const p={id:newId('p'),nom,img}; state.plans.push(p); currentPlanId=p.id; view._init=false;
-  persist(); currentView='plan'; render(); toast('Plan « '+nom+' » ajouté');
+  const f=e.target.files[0]; e.target.value=''; if(!f || !ch) return;
+  const isPdf = f.type==='application/pdf' || /\.pdf$/i.test(f.name);
+  toast(isPdf?'Lecture du PDF…':'Import du plan…');
+  let imgs=[];
+  try{ imgs = isPdf ? await pdfPages(f) : [await compress(f,2400,0.78)]; }
+  catch(err){ toast(String(err&&err.message||'Plan illisible')); return; }
+  imgs=imgs.filter(Boolean);
+  if(!imgs.length){ toast('Plan illisible'); return; }
+  const base=f.name.replace(/\.[^.]+$/,'').slice(0,40);
+  let first=null;
+  imgs.forEach((img,i)=>{
+    const def = imgs.length>1 ? `${base} p.${img.page}` : (ch.plans.length? 'Plan '+(ch.plans.length+1) : (base||'Plan'));
+    const nom = imgs.length>1 ? def : ((prompt('Nom du plan (ex : RDC, R+1, Façade) :',def)||def).trim()||def);
+    const p={id:genId('p'),nom,img:img.data||img}; ch.plans.push(p); if(!first) first=p;
+  });
+  ui.planId=first.id; view._init=false; ui.view='plan'; persist(); render();
+  toast(imgs.length>1? imgs.length+' pages importées' : 'Plan ajouté');
 };
-function renamePlan(id){
-  const p=state.plans.find(x=>x.id===id); if(!p) return;
-  const choix=prompt('Renommer le plan (laisse vide pour SUPPRIMER le plan) :',p.nom);
-  if(choix===null) return;
-  if(choix.trim()===''){
-    if(!confirm('Supprimer le plan « '+p.nom+' » ? Les réserves restent, mais perdent leur position sur ce plan.')) return;
-    state.reserves.forEach(r=>{ if(r.planId===id){ r.planId=null; r.px=null; r.py=null; } });
-    state.plans=state.plans.filter(x=>x.id!==id);
-    currentPlanId=state.plans[0]?state.plans[0].id:null; view._init=false;
-    persist(); renderPlan(); toast('Plan supprimé'); return;
+let pdfLibP=null;
+function loadPdfLib(){
+  if(window.pdfjsLib) return Promise.resolve(window.pdfjsLib);
+  if(pdfLibP) return pdfLibP;
+  pdfLibP=new Promise((res,rej)=>{ const s=document.createElement('script'); s.src='lib/pdf.min.js';
+    s.onload=()=>{ window.pdfjsLib.GlobalWorkerOptions.workerSrc='lib/pdf.worker.min.js'; res(window.pdfjsLib); };
+    s.onerror=()=>{ pdfLibP=null; rej(new Error('Lecteur PDF indisponible (ouvre l\'appli une fois avec réseau)')); };
+    document.head.appendChild(s); });
+  return pdfLibP;
+}
+async function pdfPages(file){
+  const lib=await loadPdfLib();
+  const data=new Uint8Array(await file.arrayBuffer());
+  // isEvalSupported:false : protection contre les PDF piégés
+  const pdf=await lib.getDocument({data, isEvalSupported:false, enableXfa:false}).promise;
+  let pages=[1];
+  if(pdf.numPages>1){
+    const rep=prompt(`Ce PDF contient ${pdf.numPages} pages.\nQuelle(s) page(s) importer ? (ex : 1  ou  1,3  ou  « toutes »)`,'1');
+    if(rep===null) return [];
+    pages = /^\s*toutes?\s*$/i.test(rep) ? Array.from({length:pdf.numPages},(_,i)=>i+1)
+      : uniq(rep.split(/[,; ]+/).map(x=>parseInt(x,10)).filter(n=>n>=1&&n<=pdf.numPages));
+    if(!pages.length) throw new Error('Numéro de page invalide');
+    pages=pages.slice(0,12);
   }
-  p.nom=choix.trim(); persist(); renderPlan();
+  const out=[];
+  for(const n of pages){
+    const page=await pdf.getPage(n), vp1=page.getViewport({scale:1});
+    const scale=Math.min(4, 2600/Math.max(vp1.width,vp1.height)), vp=page.getViewport({scale});
+    const c=document.createElement('canvas'); c.width=Math.round(vp.width); c.height=Math.round(vp.height);
+    const ctx=c.getContext('2d'); ctx.fillStyle='#fff'; ctx.fillRect(0,0,c.width,c.height);
+    await page.render({canvasContext:ctx, viewport:vp}).promise;
+    out.push({page:n, data:c.toDataURL('image/jpeg',0.8)});
+  }
+  return out;
+}
+function managePlan(id){
+  const p=ch.plans.find(x=>x.id===id); if(!p) return;
+  openMenu('Plan « '+p.nom+' »',[
+    {ic:'✏️', t:'Renommer le plan', fn:()=>{ const n=prompt('Nouveau nom du plan :',p.nom); if(n&&n.trim()){ p.nom=n.trim().slice(0,100); persist(); renderPlan(); } }},
+    {ic:'🗑️', t:'Supprimer le plan', s:'Les points et réserves restent, sans position sur ce plan', danger:true, fn:()=>{
+      if(!confirm('Supprimer le plan « '+p.nom+' » ?')) return;
+      [...ch.suivi.points,...ch.opr.reserves].forEach(it=>{ if(it.planId===id){ it.planId=null; it.px=null; it.py=null; } });
+      ch.plans=ch.plans.filter(x=>x.id!==id); ui.planId=ch.plans[0]?ch.plans[0].id:null; view._init=false; persist(); renderPlan(); toast('Plan supprimé'); }},
+  ]);
 }
 
-/* ---------- Feuilles ---------- */
-function openSheet(bg,sh){ $(bg).classList.add('on'); $(sh).classList.add('on'); }
-function closeSheet(bg,sh){ $(bg).classList.remove('on'); $(sh).classList.remove('on'); }
+/* ---------- Compression image ---------- */
+function compress(file,max,q){
+  return new Promise(resolve=>{
+    const img=new Image(); const url=URL.createObjectURL(file);
+    img.onload=()=>{ let w=img.naturalWidth,h=img.naturalHeight;
+      if(w>h && w>max){ h=Math.round(h*max/w); w=max; } else if(h>=w && h>max){ w=Math.round(w*max/h); h=max; }
+      const c=document.createElement('canvas'); c.width=w; c.height=h; const ctx=c.getContext('2d');
+      ctx.fillStyle='#fff'; ctx.fillRect(0,0,w,h); ctx.drawImage(img,0,0,w,h);
+      URL.revokeObjectURL(url); resolve(c.toDataURL('image/jpeg',q)); };
+    img.onerror=()=>{ URL.revokeObjectURL(url); resolve(null); };
+    img.src=url;
+  });
+}
 
-/* ---------- Réserve ---------- */
-function setSeg(g,v){ document.querySelectorAll(g+' button').forEach(b=>b.classList.toggle('on',b.dataset.v===v)); }
+/* ======================= FEUILLES ======================= */
+const SHEETS=['Item','Chantier','Visite','Opr','Moi','Menu'];
+function openSheet(n){ const bg=$('#bg'+n); bg._ouvert=performance.now(); bg.classList.add('on'); $('#sh'+n).classList.add('on'); }
+function closeSheet(n){ $('#bg'+n).classList.remove('on'); $('#sh'+n).classList.remove('on'); }
+function anySheetOpen(){ return SHEETS.some(n=>$('#sh'+n).classList.contains('on')); }
+function closeAllSheets(){ SHEETS.forEach(closeSheet); }
+// un toucher sur le fond ferme la feuille, sauf juste après son ouverture (clic fantôme)
+SHEETS.forEach(n=>$('#bg'+n).onclick=e=>{ if(performance.now()-(e.currentTarget._ouvert||0)>450) closeSheet(n); });
+document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ const open=[...SHEETS].reverse().find(n=>$('#sh'+n).classList.contains('on')); if(open) closeSheet(open); else if(placing) setPlacing(false); } });
+function setSeg(g,v){ $$(g+' button').forEach(b=>b.classList.toggle('on',b.dataset.v===v)); }
 function getSeg(g){ const b=document.querySelector(g+' button.on'); return b?b.dataset.v:''; }
+['#iType','#iPrio','#iStatutP','#iGrav','#iStatutR'].forEach(g=>$$(g+' button').forEach(b=>b.onclick=()=>setSeg(g,b.dataset.v)));
+$('#iStatutP').addEventListener('click',()=>{ if(getSeg('#iStatutP')==='fait' && !$('#iDateFait').value) $('#iDateFait').value=todayISO(); });
+$('#iStatutR').addEventListener('click',()=>{ if(getSeg('#iStatutR')==='levee' && !$('#iDateLevee').value) $('#iDateLevee').value=todayISO(); });
 
-function openReserve(id, fromPlan){
-  editId=id;
-  const r=id?state.reserves.find(x=>x.id===id):null;
-  $('#rTitre').textContent=r?numRes(r.num):'Nouvelle réserve';
-  $('#rDelete').style.display=r?'block':'none';
-  draftPhotos=r&&r.photos?[...r.photos]:[];
-  if(r){ draftPlanRef = (r.planId!=null&&r.px!=null)?{planId:r.planId,px:r.px,py:r.py}:null; }
-  else if(!fromPlan){ draftPlanRef=null; }
-  $('#rNiveau').value=r?.niveau||''; $('#rLocal').value=r?.local||''; $('#rEmpl').value=r?.empl||'';
-  $('#rLot').value=r?.lot||''; $('#rDesc').value=r?.desc||''; $('#rDelai').value=r?.delai||''; $('#rDateLevee').value=r?.dateLevee||'';
-  setSeg('#rGrav',r?.gravite||'mineure'); setSeg('#rStatut',r?.statut||'lever');
-  renderDraftPhotos(); renderPlanLink();
-  openSheet('#bgReserve','#sheetReserve');
+/* ---------- Menu générique ---------- */
+function openMenu(titre,items){
+  $('#menuTitre').textContent=titre;
+  $('#menuBody').innerHTML=items.map((it,i)=>it.html?it.html:`<button class="menu-item ${it.danger?'danger':''}" data-i="${i}"><span class="ic">${it.ic}</span><span>${esc(it.t)}${it.s?`<small>${esc(it.s)}</small>`:''}</span></button>`).join('');
+  $$('#menuBody .menu-item').forEach(b=>b.onclick=()=>{ closeSheet('Menu'); items[+b.dataset.i].fn(); });
+  openSheet('Menu');
+}
+$('#menuClose').onclick=()=>closeSheet('Menu');
+$('#btnMenu').onclick=()=>ch?menuChantier():menuHome();
+
+function menuHome(){
+  openMenu('Menu',[
+    {ic:'👤', t:'Rédacteur des documents', s:idx.settings.nom?`${idx.settings.nom}${idx.settings.societe?' — '+idx.settings.societe:''}`:'Ton nom et ta société sur les CR et PV', fn:openMoi},
+    {ic:'📥', t:'Importer un chantier ou une sauvegarde', s:'Fichier .json venant d\'un autre appareil', fn:()=>$('#importFile').click()},
+    {ic:'💾', t:'Sauvegarde complète', s:'Tous les chantiers, photos et plans dans un fichier', fn:backupAll},
+    {ic:'📲', t:'Installer l\'application', s:'Icône sur le bureau ou l\'écran d\'accueil', fn:()=>{ localSet('hideInstall','0'); renderInstall(); if(installEvt) installEvt.prompt(); else window.scrollTo(0,0); }},
+    {html:`<p class="hint" id="storeInfo">Données stockées sur cet appareil uniquement.</p>`},
+  ]);
+  storeInfo();
+}
+function menuChantier(){
+  const m=ui.module;
+  openMenu(ch.nom||'Chantier',[
+    m==='suivi'
+      ? {ic:'📄', t:'Compte rendu de visite (PDF)', s:curVisite()?`Visite n°${curVisite().num}${curVisite().date?' du '+frDate(curVisite().date):''}`:'Aucune visite', fn:exportCR}
+      : {ic:'📄', t:'Procès-verbal d\'OPR (PDF)', s:'Tableau des réserves, photos, plans annotés', fn:exportPV},
+    {ic:'📊', t:'Exporter en tableau (Excel)', s:m==='suivi'?'Points de suivi, sans les photos':'Réserves, sans les photos', fn:exportCSV},
+    {ic:'🗺️', t:'Importer un plan', s:'PDF, photo ou capture d\'écran', fn:()=>$('#planFile').click()},
+    {ic:'🏗️', t:'Infos du chantier', s:'Adresse, MOA, MOE, entreprises', fn:()=>openChantierSheet(false)},
+    {ic:'📤', t:'Envoyer ce chantier vers un autre appareil', s:'Fichier à ouvrir dans l\'appli sur le PC ou le téléphone', fn:exportChantier},
+    {ic:'🗑️', t:'Supprimer ce chantier', s:'Définitif sur cet appareil — envoie-le d\'abord en copie', danger:true, fn:deleteChantier},
+  ]);
+}
+async function storeInfo(){
+  let t=`Données stockées sur cet appareil uniquement (${idx.chantiers.length} chantier${idx.chantiers.length>1?'s':''}).`;
+  try{ if(navigator.storage&&navigator.storage.estimate){ const {usage}=await navigator.storage.estimate(); t+=' '+(usage/1048576).toFixed(1)+' Mo utilisés.'; } }catch(e){}
+  try{ if(navigator.storage&&navigator.storage.persisted&&await navigator.storage.persisted()) t+=' Stockage protégé ✓'; }catch(e){}
+  const el=$('#storeInfo'); if(el) el.textContent=t;
+}
+
+/* ---------- Point / réserve ---------- */
+function openItem(mod,id,planRef){
+  const arr=MODS[mod].arr(ch), it=id?arr.find(x=>x.id===id):null;
+  if(id && !it) return;
+  edit={mod, id:it?it.id:null, photos:it?[...it.photos]:[], planRef: it ? (it.planId?{planId:it.planId,px:it.px,py:it.py}:null) : (planRef||null)};
+  $('#iTitre').textContent = it ? label(mod,it) : (mod==='opr'?'Nouvelle réserve':'Nouveau point');
+  $('#iDelete').style.visibility = it?'visible':'hidden';
+  $('#iNiveau').value=it?it.niveau:''; $('#iLocal').value=it?it.local:''; $('#iEmpl').value=it?it.empl:'';
+  $('#iLot').value=it?it.lot:''; $('#iDesc').value=it?it.desc:'';
+  $('#iDescL').textContent = mod==='opr'?'Description de la réserve':'Constat / ce qu\'il y a à faire';
+  $('#iPtFields').hidden = mod!=='suivi'; $('#iResFields').hidden = mod!=='opr';
+  if(mod==='suivi'){
+    setSeg('#iType',it?it.type:'afaire'); setSeg('#iPrio',it?it.prio:'normale'); setSeg('#iStatutP',it?it.statut:'ouvert');
+    $('#iEcheance').value=it?it.echeance:''; $('#iDateFait').value=it?it.dateFait:'';
+    const v=it&&visiteById(it.visiteId), dv=it&&visiteById(it.doneVisiteId), cv=curVisite();
+    $('#iVisiteInfo').textContent = it
+      ? `Relevé à la visite n°${v?v.num:'?'}${v&&v.date?' du '+frDate(v.date):''}${dv?` · soldé à la visite n°${dv.num}`:''}.`
+      : (cv?`Sera rattaché à la visite n°${cv.num}${cv.date?' du '+frDate(cv.date):''}.`:'Une visite n°1 sera créée à la date du jour.');
+    const r=it&&it.reserveId&&ch.opr.reserves.find(x=>x.id===it.reserveId);
+    $('#iToRes').textContent = r ? `Voir la réserve ${label('opr',r)} (OPR)` : '→ Reporter en réserve OPR';
+    $('#iToRes').hidden = !it;
+  } else {
+    setSeg('#iGrav',it?it.gravite:'mineure'); setSeg('#iStatutR',it?it.statut:'lever');
+    $('#iDelai').value=it?it.delai:''; $('#iDateLevee').value=it?it.dateLevee:'';
+  }
+  renderEditPhotos(); renderPlanLink();
+  openSheet('Item');
+  $('#shItem .sheet-body').scrollTop=0;
 }
 function renderPlanLink(){
-  const box=$('#rPlanLink');
-  if(draftPlanRef){
-    const p=state.plans.find(x=>x.id===draftPlanRef.planId);
-    box.innerHTML=`<div class="plan-link">📍 Pointée sur « ${esc(p?p.nom:'plan')} »<button class="rm" id="rPlanRm">retirer</button></div>`;
-    $('#rPlanRm').onclick=()=>{ draftPlanRef=null; renderPlanLink(); };
-  } else if(state.plans.length){
-    box.innerHTML=`<button class="btn-place" id="rPlanPlace">📍 Placer sur le plan</button>`;
-    $('#rPlanPlace').onclick=()=>{
-      const saved=saveReserve(true); if(!saved) return;          // enregistre d'abord
-      closeSheet('#bgReserve','#sheetReserve');
-      currentView='plan'; render(); setPlacing(true, saved);
-      toast('Touche le plan à l\'endroit de la réserve');
+  const box=$('#iPlanLink');
+  if(edit.planRef){
+    const p=ch.plans.find(x=>x.id===edit.planRef.planId);
+    box.innerHTML=`<div class="plan-link">📍 Pointé sur « ${esc(p?p.nom:'plan')} »<button class="rm" id="iPlanRm">retirer</button></div>`;
+    $('#iPlanRm').onclick=()=>{ edit.planRef=null; renderPlanLink(); };
+  } else if(ch.plans.length){
+    box.innerHTML=`<button class="btn-place" id="iPlanPlace">📍 Placer sur le plan</button>`;
+    $('#iPlanPlace').onclick=()=>{
+      const id=saveItem(true); if(!id) return;
+      closeSheet('Item'); ui.view='plan'; render(); setPlacing(true,id);
     };
-  } else { box.innerHTML=''; }
+  } else box.innerHTML='';
 }
-function renderDraftPhotos(){
-  const box=$('#rPhotos');
-  box.innerHTML=draftPhotos.map((p,i)=>`<div class="photo"><img src="${p}"><button class="x" data-i="${i}">×</button></div>`).join('')
-    + `<div class="addphoto" id="rAddPhoto"><span class="pic">📷</span>Ajouter</div>`;
-  box.querySelectorAll('.x').forEach(b=>b.onclick=()=>{ draftPhotos.splice(+b.dataset.i,1); renderDraftPhotos(); });
-  $('#rAddPhoto').onclick=()=>$('#rFile').click();
+function renderEditPhotos(){
+  const box=$('#iPhotos');
+  box.innerHTML=edit.photos.map((p,i)=>`<div class="photo"><img src="${p}" data-i="${i}" alt="Photo ${i+1}"><button class="x" data-i="${i}" aria-label="Retirer la photo">×</button></div>`).join('')
+    + `<button class="addphoto" id="iAddCam"><span class="pic">📷</span>Photo</button><button class="addphoto" id="iAddGal"><span class="pic">🖼️</span>Galerie</button>`;
+  $$('#iPhotos .x').forEach(b=>b.onclick=()=>{ edit.photos.splice(+b.dataset.i,1); renderEditPhotos(); });
+  $$('#iPhotos .photo img').forEach(im=>im.onclick=()=>zoomImg(im.src));
+  $('#iAddCam').onclick=()=>$('#iFileCam').click();
+  $('#iAddGal').onclick=()=>$('#iFileGal').click();
 }
-$('#rFile').onchange=async e=>{ const files=[...e.target.files]; toast('Traitement photo…');
-  for(const f of files){ const d=await compress(f,1280,0.62); if(d) draftPhotos.push(d); } renderDraftPhotos(); e.target.value=''; };
-document.querySelectorAll('#rGrav button').forEach(b=>b.onclick=()=>setSeg('#rGrav',b.dataset.v));
-document.querySelectorAll('#rStatut button').forEach(b=>b.onclick=()=>setSeg('#rStatut',b.dataset.v));
+async function addPhotos(e){
+  const files=[...e.target.files]; e.target.value=''; if(!files.length||!edit) return;
+  toast('Traitement des photos…');
+  for(const f of files){ const d=await compress(f,1400,0.66); if(d) edit.photos.push(d); }
+  renderEditPhotos();
+}
+$('#iFileCam').onchange=addPhotos; $('#iFileGal').onchange=addPhotos;
+function zoomImg(src){ const z=document.createElement('div'); z.className='zoom'; z.innerHTML=`<img src="${src}" alt="">`; z.onclick=()=>z.remove(); document.body.appendChild(z); }
 
-function saveReserve(silent){
-  const data={ niveau:$('#rNiveau').value.trim(), local:$('#rLocal').value.trim(), empl:$('#rEmpl').value.trim(),
-    lot:$('#rLot').value.trim(), desc:$('#rDesc').value.trim(), gravite:getSeg('#rGrav')||'mineure',
-    statut:getSeg('#rStatut')||'lever', delai:$('#rDelai').value.trim(), dateLevee:$('#rDateLevee').value, photos:[...draftPhotos],
-    planId:draftPlanRef?draftPlanRef.planId:null, px:draftPlanRef?draftPlanRef.px:null, py:draftPlanRef?draftPlanRef.py:null };
-  if(!data.desc && !data.photos.length && !data.planId){ toast('Ajoute une description, une photo ou un point sur le plan'); return false; }
-  const wasNew=!editId; let rid;
-  if(editId){ const r=state.reserves.find(x=>x.id===editId); Object.assign(r,data); rid=editId; }
-  else { state.seq+=1; rid=newId('r'); state.reserves.push(Object.assign({id:rid,num:state.seq},data)); editId=rid; }
+function saveItem(silent){
+  const mod=edit.mod, arr=MODS[mod].arr(ch);
+  const base={ niveau:$('#iNiveau').value.trim(), local:$('#iLocal').value.trim(), empl:$('#iEmpl').value.trim(),
+    lot:$('#iLot').value.trim(), desc:$('#iDesc').value.trim(), photos:[...edit.photos],
+    planId:edit.planRef?edit.planRef.planId:null, px:edit.planRef?edit.planRef.px:null, py:edit.planRef?edit.planRef.py:null };
+  if(!base.desc && !base.photos.length && !base.planId){ toast('Ajoute une description, une photo ou un point sur le plan'); return false; }
+  let it=edit.id?arr.find(x=>x.id===edit.id):null;
+  const isNew=!it;
+  if(mod==='suivi'){
+    const statut=getSeg('#iStatutP')||'ouvert';
+    Object.assign(base,{ type:getSeg('#iType')||'afaire', prio:getSeg('#iPrio')||'normale', statut,
+      echeance:$('#iEcheance').value, dateFait: statut==='fait' ? ($('#iDateFait').value||todayISO()) : '' });
+    if(isNew){ if(!curVisite()) createVisite(); base.visiteId=ch.suivi.cur; }
+    const wasDone = it && it.statut==='fait';
+    if(statut==='fait' && !wasDone) base.doneVisiteId=ch.suivi.cur||'';
+    if(statut!=='fait') base.doneVisiteId='';
+  } else {
+    const statut=getSeg('#iStatutR')||'lever';
+    Object.assign(base,{ gravite:getSeg('#iGrav')||'mineure', statut, delai:$('#iDelai').value.trim(),
+      dateLevee: statut==='levee' ? ($('#iDateLevee').value||todayISO()) : '' });
+  }
+  if(it) Object.assign(it,base);
+  else { const c=mod==='opr'?ch.opr:ch.suivi; c.seq+=1; it=Object.assign({id:genId('i'), num:c.seq, created:todayISO()},base); arr.push(it); }
+  edit.id=it.id;
   persist();
-  if(!silent){ render(); closeSheet('#bgReserve','#sheetReserve'); toast(wasNew?('Réserve '+numRes(state.reserves.find(x=>x.id===rid).num)+' ajoutée'):'Réserve enregistrée'); }
-  return rid;
+  if(!silent){ closeSheet('Item'); render(); toast(isNew?`${label(mod,it)} ajouté${mod==='opr'?'e':''}`:'Enregistré'); }
+  return it.id;
 }
-$('#rSave').onclick=()=>saveReserve(false);
-$('#rDelete').onclick=()=>{ if(!editId) return; if(!confirm('Supprimer cette réserve ?')) return;
-  state.reserves=state.reserves.filter(x=>x.id!==editId); persist(); render(); closeSheet('#bgReserve','#sheetReserve'); toast('Réserve supprimée'); };
-$('#rCancel').onclick=()=>closeSheet('#bgReserve','#sheetReserve');
-$('#bgReserve').onclick=()=>closeSheet('#bgReserve','#sheetReserve');
-$('#fabAdd').onclick=()=>openReserve(null);
+$('#iSave').onclick=()=>saveItem(false);
+$('#iCancel').onclick=()=>closeSheet('Item');
+$('#iDelete').onclick=()=>{
+  if(!edit||!edit.id) return; const mod=edit.mod;
+  if(!confirm(`Supprimer ${mod==='opr'?'cette réserve':'ce point'} ?`)) return;
+  if(mod==='opr'){ ch.opr.reserves=ch.opr.reserves.filter(x=>x.id!==edit.id); ch.suivi.points.forEach(p=>{ if(p.reserveId===edit.id) p.reserveId=''; }); }
+  else ch.suivi.points=ch.suivi.points.filter(x=>x.id!==edit.id);
+  persist(); closeSheet('Item'); render(); toast('Supprimé');
+};
+$('#iToRes').onclick=()=>{
+  const id=saveItem(true); if(!id) return;
+  const p=ch.suivi.points.find(x=>x.id===id);
+  let r=p.reserveId&&ch.opr.reserves.find(x=>x.id===p.reserveId);
+  if(!r){
+    ch.opr.seq+=1;
+    r=cleanReserve({ id:genId('i'), num:ch.opr.seq, created:todayISO(), niveau:p.niveau, local:p.local, empl:p.empl, lot:p.lot,
+      desc:p.desc, photos:p.photos, planId:p.planId, px:p.px, py:p.py, gravite:(p.prio==='urgente'||p.type==='securite')?'majeure':'mineure',
+      statut:'lever', fromPoint:p.id });
+    ch.opr.reserves.push(r); p.reserveId=r.id; persist();
+    toast(`Réserve ${label('opr',r)} créée dans les OPR`);
+  }
+  closeSheet('Item'); ui.module='opr'; ch.lastModule='opr'; ui.view='liste'; render(); openItem('opr',r.id);
+};
 
-/* ---------- Chantier ---------- */
-function openChantier(){ const c=state.chantier||{};
-  $('#cNom').value=c.nom||''; $('#cAdresse').value=c.adresse||''; $('#cDate').value=c.date||''; $('#cRef').value=c.ref||'';
-  $('#cMoa').value=c.moa||''; $('#cMoe').value=c.moe||''; $('#cPresents').value=c.presents||'';
-  openSheet('#bgChantier','#sheetChantier'); }
-$('#cSave').onclick=()=>{ state.chantier={ nom:$('#cNom').value.trim(),adresse:$('#cAdresse').value.trim(),date:$('#cDate').value,
-  ref:$('#cRef').value.trim(),moa:$('#cMoa').value.trim(),moe:$('#cMoe').value.trim(),presents:$('#cPresents').value.trim() };
-  persist(); render(); closeSheet('#bgChantier','#sheetChantier'); toast('Chantier enregistré'); };
-$('#cCancel').onclick=()=>closeSheet('#bgChantier','#sheetChantier');
-$('#bgChantier').onclick=()=>closeSheet('#bgChantier','#sheetChantier');
-$('#chantierBar').onclick=openChantier;
+/* ---------- Chantier (infos) ---------- */
+let chantierNew=false;
+function openChantierSheet(isNew){
+  chantierNew=isNew; const c=isNew?{}:ch;
+  $('#cTitre').textContent=isNew?'Nouveau chantier':'Infos chantier';
+  $('#cNom').value=c.nom||''; $('#cAdresse').value=c.adresse||''; $('#cRef').value=c.ref||'';
+  $('#cMoa').value=c.moa||''; $('#cMoe').value=c.moe||''; $('#cEntreprises').value=c.entreprises||'';
+  $('#cSave').textContent=isNew?'Créer le chantier':'Enregistrer';
+  openSheet('Chantier'); setTimeout(()=>{ if(isNew) $('#cNom').focus(); },260);
+}
+$('#cSave').onclick=async()=>{
+  const d={ nom:$('#cNom').value.trim(), adresse:$('#cAdresse').value.trim(), ref:$('#cRef').value.trim(),
+    moa:$('#cMoa').value.trim(), moe:$('#cMoe').value.trim(), entreprises:$('#cEntreprises').value.trim() };
+  if(chantierNew){
+    if(!d.nom){ toast('Donne un nom au chantier'); $('#cNom').focus(); return; }
+    const c=Object.assign(newChantier(),d);
+    await IDB.set('ch:'+c.id,c); idx.chantiers.push(summary(c)); await saveIdx();
+    closeSheet('Chantier'); await openChantier(c.id); toast('Chantier créé');
+  } else {
+    Object.assign(ch,d); persist(); closeSheet('Chantier'); render(); toast('Chantier enregistré');
+  }
+};
+$('#cCancel').onclick=()=>closeSheet('Chantier');
+async function deleteChantier(){
+  if(!confirm(`Supprimer définitivement « ${ch.nom||'ce chantier'} » de cet appareil ?\n\nPoints, réserves, photos et plans seront effacés.`)) return;
+  const id=ch.id; clearTimeout(saveT); saveT=null; ch=null;
+  try{ await IDB.del('ch:'+id); }catch(e){}
+  idx.chantiers=idx.chantiers.filter(x=>x.id!==id); await saveIdx();
+  showHome(); toast('Chantier supprimé');
+}
 
-/* ---------- Onglets / filtres ---------- */
-$('#tabListe').onclick=()=>{ currentView='liste'; render(); };
-$('#tabPlan').onclick=()=>{ currentView='plan'; render(); };
-document.querySelectorAll('#filtres .chip').forEach(c=>c.onclick=()=>{ document.querySelectorAll('#filtres .chip').forEach(x=>x.classList.remove('on')); c.classList.add('on'); filtre=c.dataset.f; render(); });
+/* ---------- Visites ---------- */
+let visiteEdit=null;
+function createVisite(){
+  const s=ch.suivi; s.vseq+=1;
+  const prev=s.visites.reduce((m,v)=>(!m||v.num>m.num)?v:m,null);
+  const v=cleanVisite({id:genId('v'), num:s.vseq, date:todayISO(), presents:prev?prev.presents:''});
+  s.visites.push(v); s.cur=v.id; persist(); return v;
+}
+function newVisite(){
+  const cv=curVisite();
+  if(cv && cv.date===todayISO() && !confirm(`La visite n°${cv.num} est déjà datée d'aujourd'hui.\nCréer quand même une nouvelle visite ?`)) return;
+  const v=createVisite(); ui.filtre.suivi='ouverts'; render(); openVisite(v.id); toast(`Visite n°${v.num} démarrée`);
+}
+function openVisite(id){
+  const v=visiteById(id); if(!v) return; visiteEdit=v.id;
+  $('#vTitre').textContent=`Visite n°${v.num}`;
+  $('#vChips').innerHTML = ch.suivi.visites.length>1 ? [...ch.suivi.visites].sort((a,b)=>b.num-a.num).map(x=>`<button class="chip ${x.id===v.id?'on':''}" data-id="${esc(x.id)}">n°${x.num}${x.date?' · '+frDate(x.date).slice(0,5):''}</button>`).join('') : '';
+  $$('#vChips .chip').forEach(b=>b.onclick=()=>{ ch.suivi.cur=b.dataset.id; persist(); render(); openVisite(b.dataset.id); });
+  $('#vDate').value=v.date; $('#vMeteo').value=v.meteo; $('#vEffectifs').value=v.effectifs;
+  $('#vPresents').value=v.presents; $('#vAvancement').value=v.avancement; $('#vProchaine').value=v.prochaine;
+  openSheet('Visite');
+}
+$('#vSave').onclick=()=>{
+  const v=visiteById(visiteEdit); if(!v) return;
+  Object.assign(v,{ date:$('#vDate').value, meteo:$('#vMeteo').value.trim(), effectifs:$('#vEffectifs').value.trim(),
+    presents:$('#vPresents').value.trim(), avancement:$('#vAvancement').value.trim(), prochaine:$('#vProchaine').value });
+  ch.suivi.cur=v.id; persist(); closeSheet('Visite'); render(); toast('Visite enregistrée');
+};
+$('#vCancel').onclick=()=>closeSheet('Visite');
+$('#vDelete').onclick=()=>{
+  const v=visiteById(visiteEdit); if(!v) return;
+  const n=ch.suivi.points.filter(p=>p.visiteId===v.id).length;
+  if(n){ toast(`Impossible : ${n} point${n>1?'s':''} relevé${n>1?'s':''} à cette visite`); return; }
+  if(!confirm(`Supprimer la visite n°${v.num} ?`)) return;
+  ch.suivi.points.forEach(p=>{ if(p.doneVisiteId===v.id) p.doneVisiteId=''; });
+  ch.suivi.visites=ch.suivi.visites.filter(x=>x.id!==v.id);
+  const last=ch.suivi.visites.reduce((m,x)=>(!m||x.num>m.num)?x:m,null); ch.suivi.cur=last?last.id:null;
+  persist(); closeSheet('Visite'); render(); toast('Visite supprimée');
+};
 
-/* ---------- Menu ---------- */
-$('#btnMenu').onclick=()=>{ updateStoreInfo(); openSheet('#bgMenu','#sheetMenu'); };
-$('#mCancel').onclick=()=>closeSheet('#bgMenu','#sheetMenu');
-$('#mClose2').onclick=()=>closeSheet('#bgMenu','#sheetMenu');
-$('#bgMenu').onclick=()=>closeSheet('#bgMenu','#sheetMenu');
-$('#mAddPlan').onclick=()=>{ closeSheet('#bgMenu','#sheetMenu'); $('#planFile').click(); };
-async function updateStoreInfo(){ let t='Données stockées sur cet appareil uniquement.';
-  if(navigator.storage&&navigator.storage.estimate){ try{ const {usage}=await navigator.storage.estimate(); t+=' ('+(usage/1048576).toFixed(1)+' Mo utilisés)'; }catch(e){} }
-  $('#storeInfo').textContent=t; }
+/* ---------- OPR (séance) ---------- */
+function openOpr(){ const o=ch.opr; $('#oDate').value=o.date||todayISO(); $('#oPresents').value=o.presents; $('#oObs').value=o.obs; openSheet('Opr'); }
+$('#oSave').onclick=()=>{ Object.assign(ch.opr,{date:$('#oDate').value, presents:$('#oPresents').value.trim(), obs:$('#oObs').value.trim()}); persist(); closeSheet('Opr'); render(); toast('OPR enregistrée'); };
+$('#oCancel').onclick=()=>closeSheet('Opr');
 
-/* ---------- Plan annoté pour le PV ---------- */
-function renderPlanImage(plan){
+/* ---------- Rédacteur ---------- */
+function openMoi(){ const s=idx.settings; $('#mNom').value=s.nom||''; $('#mFonction').value=s.fonction||''; $('#mSociete').value=s.societe||''; openSheet('Moi'); }
+$('#mSave').onclick=async()=>{ idx.settings={nom:$('#mNom').value.trim(), fonction:$('#mFonction').value.trim(), societe:$('#mSociete').value.trim()}; await saveIdx(); closeSheet('Moi'); toast('Enregistré'); };
+$('#mCancel').onclick=()=>closeSheet('Moi');
+
+/* ======================= EXPORTS ======================= */
+function renderPlanImage(plan,mod,items){
   return new Promise(res=>{
     const img=new Image();
     img.onload=()=>{
-      const maxW=1600; let w=img.naturalWidth,h=img.naturalHeight; if(w>maxW){ h=h*maxW/w; w=maxW; }
+      const maxW=1800; let w=img.naturalWidth,h=img.naturalHeight; if(w>maxW){ h=h*maxW/w; w=maxW; }
       const c=document.createElement('canvas'); c.width=w; c.height=h; const ctx=c.getContext('2d');
       ctx.drawImage(img,0,0,w,h);
-      const cols={mineure:'#8A8175',majeure:'#E8764D',bloquante:'#DC2626',levee:'#10B981'};
-      const rad=Math.max(13, w*0.013);
-      state.reserves.filter(r=>r.planId===plan.id&&r.px!=null).forEach(r=>{
-        const x=r.px/100*w, y=r.py/100*h;
-        ctx.beginPath(); ctx.arc(x,y,rad,0,7); ctx.fillStyle=cols[gravClass(r)]||'#8A8175'; ctx.fill();
+      const cols={mineure:'#8A8175',info:'#8A8175',majeure:'#E8764D',afaire:'#E8764D',bloquante:'#DC2626',securite:'#DC2626',urgent:'#DC2626',qualite:'#2D5BFF',fait:'#10B981'};
+      const rad=Math.max(14,Math.max(w,h)*0.02);
+      items.filter(it=>it.planId===plan.id&&it.px!=null).forEach(it=>{
+        const x=it.px/100*w, y=it.py/100*h;
+        ctx.beginPath(); ctx.arc(x,y,rad,0,Math.PI*2); ctx.fillStyle=cols[pinClass(mod,it)]||'#8A8175'; ctx.fill();
         ctx.lineWidth=Math.max(2,rad*0.16); ctx.strokeStyle='#fff'; ctx.stroke();
-        ctx.fillStyle='#fff'; ctx.font='700 '+Math.round(rad*1.05)+'px -apple-system,Arial'; ctx.textAlign='center'; ctx.textBaseline='middle';
-        ctx.fillText(String(r.num),x,y);
+        ctx.fillStyle='#fff'; ctx.font='700 '+Math.round(rad*(it.num>99?0.8:1.0))+'px Arial'; ctx.textAlign='center'; ctx.textBaseline='middle';
+        ctx.fillText(String(it.num),x,y+1);
       });
       res(c.toDataURL('image/jpeg',0.82));
     };
     img.onerror=()=>res(null); img.src=plan.img;
   });
 }
-
-/* ---------- Export PV ---------- */
-async function buildPV(){
-  const c=state.chantier||{};
-  const rows=state.reserves.map(r=>{
-    const loc=[r.niveau,r.local,r.empl].filter(Boolean).join(' / ')||'—';
-    const photos=(r.photos||[]).map(p=>`<img class="pvphoto" src="${p}">`).join('');
-    const planTag=(r.planId!=null&&r.px!=null)?` 📍${esc((state.plans.find(p=>p.id===r.planId)||{}).nom||'')}`:'';
-    const st=r.statut==='levee'?'Levée'+(r.dateLevee?(' le '+frDate(r.dateLevee)):''):'À lever'+(r.delai?(' ('+esc(r.delai)+')'):'');
-    return `<tr><td class="rnum">${numRes(r.num)}</td><td>${esc(loc)}${planTag}</td><td>${esc(r.lot||'—')}</td>
-      <td>${esc(r.desc||'')}<div>${photos}</div></td><td class="pgrav">${esc(r.gravite||'')}</td><td>${esc(st)}</td></tr>`;
-  }).join('');
-  const nbLever=state.reserves.filter(r=>r.statut!=='levee').length;
-
-  let plansHtml='';
-  const plansAvecPins=state.plans.filter(p=>state.reserves.some(r=>r.planId===p.id&&r.px!=null));
-  if(plansAvecPins.length){
-    plansHtml='<h2>Plans annotés</h2>';
-    for(const p of plansAvecPins){ const d=await renderPlanImage(p); if(d) plansHtml+=`<div><b>${esc(p.nom)}</b><br><img class="pvplan" src="${d}"></div>`; }
-  }
-  $('#pv').innerHTML=`
-    <h1>Procès-verbal de réserves — OPR</h1>
-    <div class="meta"><b>${esc(c.nom||'(chantier non renseigné)')}</b>${c.adresse?' — '+esc(c.adresse):''}<br>
-      ${c.date?'Date OPR : <b>'+frDate(c.date)+'</b> &nbsp; ':''}${c.ref?'Réf. : '+esc(c.ref)+' &nbsp; ':''}<br>
-      ${c.moa?'MOA : '+esc(c.moa)+' &nbsp; ':''}${c.moe?'MOE : '+esc(c.moe):''}<br>
-      ${c.presents?'Présents : '+esc(c.presents)+'<br>':''}
-      Total : <b>${state.reserves.length}</b> réserve(s) — <b>${nbLever}</b> à lever</div>
-    <table><thead><tr><th>N°</th><th>Localisation</th><th>Lot / Entreprise</th><th>Réserve</th><th>Gravité</th><th>Statut</th></tr></thead>
-      <tbody>${rows||'<tr><td colspan="6">Aucune réserve.</td></tr>'}</tbody></table>
-    ${plansHtml}
-    <div class="sign"><div>Le maître d'œuvre</div><div>L'entreprise</div></div>`;
+async function plansHtml(mod,items){
+  const plans=ch.plans.filter(p=>items.some(it=>it.planId===p.id&&it.px!=null));
+  if(!plans.length) return '';
+  let h='<h2>Plans annotés</h2>';
+  for(const p of plans){ const d=await renderPlanImage(p,mod,items); if(d) h+=`<div class="planbloc"><b>${esc(p.nom)}</b><br><img class="pvplan" src="${d}" alt=""></div>`; }
+  return h;
 }
+function enTete(kicker,titre){
+  const s=idx.settings;
+  const red=[s.nom,s.fonction,s.societe].filter(Boolean).map(esc).join('<br>');
+  return `<div class="pv-top"><div><div class="pv-k">${kicker}</div><h1>${titre}</h1></div><div class="pv-r">${red?'Établi par :<br>'+red:''}</div></div>`;
+}
+function metaRows(rows){ return `<table class="meta">${rows.filter(r=>r[1]).map(([k,v])=>`<tr><td class="k">${k}</td><td>${v}</td></tr>`).join('')}</table>`; }
+function locOf(it){ return esc([it.niveau,it.local,it.empl].filter(Boolean).join(' / ')||'—'); }
+function photosOf(it){ return it.photos.map(p=>`<img class="pvphoto" src="${p}" alt="">`).join(''); }
+const multiline = s => esc(s).replace(/\n/g,'<br>');
+async function imprimer(titre){
+  const pv=$('#pv');
+  await Promise.all([...pv.querySelectorAll('img')].map(i=>i.decode?i.decode().catch(()=>{}):null));
+  const old=document.title; document.title=titre;
+  const restore=()=>{ document.title=old; window.removeEventListener('afterprint',restore); };
+  window.addEventListener('afterprint',restore);
+  setTimeout(()=>{ window.print(); setTimeout(restore,1500); },250);
+}
+
+async function exportCR(){
+  const v=curVisite();
+  if(!v){ toast('Aucune visite : crée d\'abord la visite'); return; }
+  closeAllSheets(); toast('Préparation du compte rendu…');
+  const vnum=id=>{ const x=visiteById(id); return x?x.num:0; };
+  const pts=ch.suivi.points;
+  // état à la date de cette visite : relevé au plus tard à cette visite, et pas encore soldé à ce moment-là
+  const ouverts=pts.filter(p=>vnum(p.visiteId)<=v.num && (p.statut!=='fait' || vnum(p.doneVisiteId)>v.num));
+  const soldes=pts.filter(p=>p.doneVisiteId===v.id);
+  const nouveaux=new Set(pts.filter(p=>p.visiteId===v.id).map(p=>p.id));
+  const parLot={}; ouverts.forEach(p=>{ (parLot[p.lot||'Sans entreprise désignée']=parLot[p.lot||'Sans entreprise désignée']||[]).push(p); });
+  const lots=Object.keys(parLot).sort((a,b)=>a.localeCompare(b,'fr'));
+  const ligne=p=>{
+    const ret=p.echeance && p.echeance<(v.date||todayISO()) && p.statut!=='fait';
+    return `<tr><td class="rnum">${label('suivi',p)}${nouveaux.has(p.id)?'<br><small>nouveau</small>':''}</td><td>${locOf(p)}</td>
+    <td>${multiline(p.desc||'')}<div>${photosOf(p)}</div></td>
+    <td>${TYPES[p.type]}${p.prio==='urgente'?'<br><span class="rouge">URGENT</span>':''}</td>
+    <td class="${ret?'rouge':''}">${p.echeance?frDate(p.echeance):'—'}</td><td>n°${vnum(p.visiteId)||'?'}</td></tr>`;
+  };
+  const tete='<thead><tr><th>N°</th><th>Localisation</th><th>Constat / à faire</th><th>Type</th><th>Échéance</th><th>Relevé</th></tr></thead>';
+  const blocOuverts = lots.length ? lots.map(l=>`<h3>${esc(l)} — ${parLot[l].length} point${parLot[l].length>1?'s':''}</h3><table class="lst">${tete}<tbody>${parLot[l].sort((a,b)=>a.num-b.num).map(ligne).join('')}</tbody></table>`).join('') : '<p>Aucun point ouvert.</p>';
+  const blocSoldes = soldes.length ? `<table class="lst"><thead><tr><th>N°</th><th>Localisation</th><th>Lot / Entreprise</th><th>Point</th><th>Soldé le</th></tr></thead><tbody>${soldes.sort((a,b)=>a.num-b.num).map(p=>`<tr><td class="rnum">${label('suivi',p)}</td><td>${locOf(p)}</td><td>${esc(p.lot||'—')}</td><td>${multiline(p.desc||'')}</td><td>${frDate(p.dateFait)}</td></tr>`).join('')}</tbody></table>` : '<p>Aucun point soldé lors de cette visite.</p>';
+  const diffusion=(ch.entreprises||'').split(/\r?\n/).map(s=>s.trim()).filter(Boolean);
+  $('#pv').innerHTML = enTete('Compte rendu de visite de chantier', `Visite n°${v.num}${v.date?' — '+esc(longDate(v.date)):''}`)
+    + metaRows([['Chantier',`<b>${esc(ch.nom)}</b>`],['Adresse',esc(ch.adresse)],['Référence',esc(ch.ref)],['Maître d\'ouvrage',esc(ch.moa)],['Maîtrise d\'œuvre',esc(ch.moe)],
+       ['Météo',esc(v.meteo)],['Effectifs',esc(v.effectifs)],['Présents',multiline(v.presents)],['Prochaine visite',v.prochaine?esc(longDate(v.prochaine)):'']])
+    + (v.avancement?`<h2>Avancement général</h2><div class="txt">${multiline(v.avancement)}</div>`:'')
+    + `<h2>Points ouverts (${ouverts.length})</h2>${blocOuverts}`
+    + `<h2>Points soldés lors de cette visite (${soldes.length})</h2>${blocSoldes}`
+    + await plansHtml('suivi',[...ouverts,...soldes])
+    + (diffusion.length?`<h2>Diffusion</h2><p>${diffusion.map(esc).join(' · ')}</p>`:'')
+    + `<p class="pied">Sauf observation écrite sous 8 jours, le présent compte rendu est réputé accepté. — Document établi avec OPR Chantier.</p>`;
+  await imprimer(`CR visite ${v.num} - ${ch.nom||'chantier'}${v.date?' - '+v.date:''}`);
+}
+
 async function exportPV(){
-  if(state.reserves.length===0){ toast('Aucune réserve à exporter'); return; }
-  toast('Préparation du PV…'); closeSheet('#bgMenu','#sheetMenu');
-  await buildPV();
-  setTimeout(()=>window.print(),300);
+  const o=ch.opr, rs=[...o.reserves].sort((a,b)=>a.num-b.num);
+  if(!rs.length){ toast('Aucune réserve à exporter'); return; }
+  closeAllSheets(); toast('Préparation du PV…');
+  const nbLever=rs.filter(r=>r.statut!=='levee').length;
+  const rows=rs.map(r=>{
+    const st=r.statut==='levee'?'Levée'+(r.dateLevee?' le '+frDate(r.dateLevee):''):'À lever'+(r.delai?' ('+esc(r.delai)+')':'');
+    return `<tr><td class="rnum">${label('opr',r)}</td><td>${locOf(r)}</td><td>${esc(r.lot||'—')}</td>
+      <td>${multiline(r.desc||'')}<div>${photosOf(r)}</div></td><td class="b ${r.gravite==='bloquante'?'rouge':''}">${esc(r.gravite)}</td><td>${st}</td></tr>`;
+  }).join('');
+  $('#pv').innerHTML = enTete('Opérations préalables à la réception', 'Procès-verbal de réserves')
+    + metaRows([['Chantier',`<b>${esc(ch.nom)}</b>`],['Adresse',esc(ch.adresse)],['Référence',esc(ch.ref)],['Maître d\'ouvrage',esc(ch.moa)],['Maîtrise d\'œuvre',esc(ch.moe)],
+       ['Date des OPR',o.date?esc(longDate(o.date)):''],['Présents',multiline(o.presents)],['Bilan',`<b>${rs.length}</b> réserve${rs.length>1?'s':''} — <b>${nbLever}</b> à lever, <b>${rs.length-nbLever}</b> levée${rs.length-nbLever>1?'s':''}`]])
+    + (o.obs?`<h2>Observations générales</h2><div class="txt">${multiline(o.obs)}</div>`:'')
+    + `<h2>Réserves</h2><table class="lst"><thead><tr><th>N°</th><th>Localisation</th><th>Lot / Entreprise</th><th>Réserve</th><th>Gravité</th><th>Statut</th></tr></thead><tbody>${rows}</tbody></table>`
+    + await plansHtml('opr',rs)
+    + `<div class="sign"><div>Le maître d'ouvrage</div><div>Le maître d'œuvre</div><div>L'entreprise</div></div>`;
+  await imprimer(`PV OPR - ${ch.nom||'chantier'}${o.date?' - '+o.date:''}`);
 }
-$('#btnExport').onclick=exportPV;
-$('#mExportPV').onclick=exportPV;
 
-/* ---------- Sauvegarde / restauration ---------- */
-function download(name,text,type){ const b=new Blob([text],{type:type||'application/octet-stream'}); const u=URL.createObjectURL(b);
-  const a=document.createElement('a'); a.href=u; a.download=name; document.body.appendChild(a); a.click(); setTimeout(()=>{URL.revokeObjectURL(u);a.remove();},1500); }
-function slug(){ const c=state.chantier||{}; const b=(c.nom||'opr').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'').slice(0,40); return b||'opr'; }
-$('#mBackup').onclick=()=>{ download('sauvegarde-'+slug()+'.json',JSON.stringify(state),'application/json'); toast('Sauvegarde générée — range-la dans Fichiers'); };
-$('#mRestore').onclick=()=>$('#mRestoreFile').click();
-$('#mRestoreFile').onchange=e=>{ const f=e.target.files[0]; if(!f) return; const rd=new FileReader();
-  rd.onload=()=>{ try{ const o=JSON.parse(rd.result); if(!o||!Array.isArray(o.reserves)) throw 0;
-    if(!confirm('Remplacer les données actuelles par cette sauvegarde ?')) return;
-    state=Object.assign({chantier:{},reserves:[],plans:[],seq:0},o); if(!Array.isArray(state.plans)) state.plans=[];
-    if(!state.seq) state.seq=state.reserves.reduce((m,r)=>Math.max(m,r.num||0),0);
-    currentPlanId=state.plans[0]?state.plans[0].id:null; view._init=false;
-    persist(); render(); closeSheet('#bgMenu','#sheetMenu'); toast('Sauvegarde restaurée');
-  }catch(err){ toast('Fichier invalide'); } }; rd.readAsText(f); e.target.value=''; };
-$('#mCsv').onclick=()=>{ if(!state.reserves.length){ toast('Aucune réserve'); return; }
-  const head=['N°','Niveau','Local','Emplacement','Lot/Entreprise','Description','Gravité','Statut','Délai','Date levée','Plan'];
-  const q=s=>'"'+String(s==null?'':s).replace(/"/g,'""')+'"';
-  const lines=[head.map(q).join(';')];
-  state.reserves.forEach(r=>{ const pn=(state.plans.find(p=>p.id===r.planId)||{}).nom||'';
-    lines.push([numRes(r.num),r.niveau,r.local,r.empl,r.lot,r.desc,r.gravite,r.statut==='levee'?'Levée':'À lever',r.delai,frDate(r.dateLevee),pn].map(q).join(';')); });
-  download('reserves-'+slug()+'.csv','﻿'+lines.join('\r\n'),'text/csv'); toast('CSV généré'); };
-$('#mReset').onclick=()=>{ if(!confirm('Tout effacer et démarrer une nouvelle OPR ?\n\n(Pense à faire une sauvegarde avant !)')) return;
-  state={chantier:{},reserves:[],plans:[],seq:0}; currentPlanId=null; view._init=false; currentView='liste';
-  persist(); render(); closeSheet('#bgMenu','#sheetMenu'); toast('Nouvelle OPR'); };
+/* ---------- Fichiers : export, envoi, import ---------- */
+function dl(name,text,type){ const b=new Blob([text],{type}); const u=URL.createObjectURL(b);
+  const a=document.createElement('a'); a.href=u; a.download=name; document.body.appendChild(a); a.click(); setTimeout(()=>{URL.revokeObjectURL(u);a.remove();},2000); }
+async function partager(name,text,type){
+  try{
+    const f=new File([text],name,{type});
+    if(navigator.canShare && navigator.canShare({files:[f]}) && /Android|iPhone|iPad|iPod/i.test(navigator.userAgent)){
+      await navigator.share({files:[f], title:name}); return true;
+    }
+  }catch(e){ if(e && e.name==='AbortError') return false; }
+  dl(name,text,type); return true;
+}
+function exportCSV(){
+  const m=ui.module, q=s=>'"'+String(s==null?'':s).replace(/"/g,'""')+'"', pn=it=>(ch.plans.find(p=>p.id===it.planId)||{}).nom||'';
+  const vnum=id=>{ const x=visiteById(id); return x?x.num:''; };
+  let head, rows;
+  if(m==='suivi'){
+    head=['N°','Type','Priorité','Statut','Niveau','Local','Emplacement','Lot/Entreprise','Constat / à faire','Échéance','Soldé le','Visite','Plan'];
+    rows=[...ch.suivi.points].sort((a,b)=>a.num-b.num).map(p=>[label('suivi',p),TYPES[p.type],p.prio,p.statut==='fait'?'Soldé':'Ouvert',p.niveau,p.local,p.empl,p.lot,p.desc,frDate(p.echeance),frDate(p.dateFait),vnum(p.visiteId),pn(p)]);
+  } else {
+    head=['N°','Niveau','Local','Emplacement','Lot/Entreprise','Description','Gravité','Statut','Délai','Date levée','Plan'];
+    rows=[...ch.opr.reserves].sort((a,b)=>a.num-b.num).map(r=>[label('opr',r),r.niveau,r.local,r.empl,r.lot,r.desc,r.gravite,r.statut==='levee'?'Levée':'À lever',r.delai,frDate(r.dateLevee),pn(r)]);
+  }
+  if(!rows.length){ toast('Rien à exporter'); return; }
+  const csv='﻿'+[head,...rows].map(r=>r.map(q).join(';')).join('\r\n');
+  dl(`${m==='suivi'?'suivi':'reserves'}-${slug(ch.nom)}.csv`,csv,'text/csv'); toast('Tableau généré');
+}
+async function exportChantier(){
+  await flush();
+  const txt=JSON.stringify({type:'opr-chantier', v:3, exporte:new Date().toISOString(), chantier:ch});
+  await partager(`chantier-${slug(ch.nom)}-${todayISO()}.json`,txt,'application/json');
+  toast('Fichier du chantier prêt — ouvre-le dans l\'appli sur l\'autre appareil (Menu → Importer)');
+}
+async function backupAll(){
+  if(ch) await flush();
+  const chantiers=[];
+  for(const s of idx.chantiers){ try{ const c=await IDB.get('ch:'+s.id); if(c) chantiers.push(c); }catch(e){} }
+  if(!chantiers.length){ toast('Aucun chantier à sauvegarder'); return; }
+  const txt=JSON.stringify({type:'opr-sauvegarde', v:3, exporte:new Date().toISOString(), settings:idx.settings, chantiers});
+  await partager(`sauvegarde-opr-chantier-${todayISO()}.json`,txt,'application/json');
+  toast(`Sauvegarde de ${chantiers.length} chantier${chantiers.length>1?'s':''} générée`);
+}
+$('#importFile').onchange=e=>{
+  const f=e.target.files[0]; e.target.value=''; if(!f) return;
+  const rd=new FileReader();
+  rd.onload=async()=>{
+    let o; try{ o=JSON.parse(rd.result); }catch(err){ toast('Fichier illisible'); return; }
+    let list=[];
+    if(o && o.type==='opr-chantier' && o.chantier) list=[cleanChantier(o.chantier)];
+    else if(o && o.type==='opr-sauvegarde' && Array.isArray(o.chantiers)) list=o.chantiers.map(cleanChantier);
+    else if(o && Array.isArray(o.reserves)) list=[fromLegacy(o)];   // sauvegarde de l'ancienne version
+    if(!list.length){ toast('Ce fichier n\'est pas un chantier OPR Chantier'); return; }
+    let n=0;
+    for(const c of list){
+      if(idx.chantiers.some(x=>x.id===c.id)){
+        const rep=confirm(`« ${c.nom||'Chantier'} » existe déjà sur cet appareil.\n\nOK = remplacer par la version du fichier\nAnnuler = garder les deux`);
+        if(!rep){ c.id=genId('c'); c.nom=(c.nom||'Chantier')+' (copie)'; }
+      }
+      try{ await IDB.set('ch:'+c.id,c); }catch(err){ toast('⚠️ Stockage plein'); break; }
+      const s=summary(c), i=idx.chantiers.findIndex(x=>x.id===c.id); if(i>=0) idx.chantiers[i]=s; else idx.chantiers.push(s); n++;
+    }
+    if(o.type==='opr-sauvegarde' && o.settings && !idx.settings.nom){ idx.settings=Object.assign(idx.settings,{nom:S(o.settings.nom,100),fonction:S(o.settings.fonction,100),societe:S(o.settings.societe,150)}); }
+    await saveIdx();
+    if(n===1 && list.length===1) await openChantier(list[0].id); else showHome();
+    toast(`${n} chantier${n>1?'s':''} importé${n>1?'s':''}`);
+  };
+  rd.readAsText(f);
+};
 
-/* ---------- SW + init ---------- */
-if('serviceWorker' in navigator){ window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{})); }
-window.addEventListener('resize',()=>{ if(currentView==='plan'&&currentPlan()) applyTransform(); });
-(async()=>{ await load(); render(); })();
+/* ---------- Démarrage ---------- */
+if('serviceWorker' in navigator && location.protocol!=='file:'){ window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{})); }
+window.addEventListener('resize',()=>{ if(ch && ui.view==='plan' && currentPlan()){ sizeStage(); applyTransform(); } });
+boot();
 </script>
 </body>
 </html>
