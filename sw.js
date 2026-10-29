@@ -1,7 +1,7 @@
 /* Service worker OPR Chantier — l'appli fonctionne sans réseau (chantier, sous-sol).
    Page : réseau d'abord (mises à jour automatiques), copie locale si pas de réseau.
    Le reste (icônes, lecteur PDF) : copie locale d'abord. */
-const CACHE = 'opr-chantier-v3.0';
+const CACHE = 'opr-chantier-v3.1';
 const CORE = [
   './',
   './index.html',

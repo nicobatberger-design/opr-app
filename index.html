@@ -98,6 +98,18 @@
   .install .tx b{display:block; font-size:15px}
   .install .x{border:none; background:none; color:var(--gris); font-size:20px; cursor:pointer; align-self:flex-start; padding:0 2px}
   .foot-note{font-size:12px; color:var(--gris); text-align:center; margin-top:26px}
+  .sync-line{
+    display:flex; align-items:center; gap:9px; width:100%; text-align:left; cursor:pointer; margin:-4px 0 14px;
+    background:var(--carte); border:1px solid var(--ligne); border-radius:11px; padding:9px 12px; color:var(--brun); font-size:13px; font-weight:600;
+  }
+  .sync-line .d{width:9px; height:9px; border-radius:50%; background:var(--vert); flex:0 0 auto}
+  .sync-line .t{flex:1; min-width:0}
+  .sync-line .chev{color:var(--gris); flex:0 0 auto}
+  .sync-line.off{background:linear-gradient(135deg,#EEF2FF,#F7F4FF); border-color:#D6E0FF; color:var(--bleu)}
+  .sync-line.off .d{background:var(--bleu)}
+  .sync-line.attente .d{background:var(--terra)} .sync-line.erreur .d{background:var(--rouge)}
+  .sync-line.encours .d{background:var(--bleu); animation:pulse 1s ease-in-out infinite}
+  @keyframes pulse{50%{opacity:.3}}
 
   /* ===== Liste ===== */
   .filtres{display:flex; gap:7px; overflow-x:auto; padding:12px 14px 4px; -webkit-overflow-scrolling:touch}
@@ -215,6 +227,10 @@
   .photos{display:flex; flex-wrap:wrap; gap:9px}
   .photo{position:relative; width:84px; height:84px; border-radius:10px; overflow:hidden; border:1px solid var(--ligne)}
   .photo img{width:100%; height:100%; object-fit:cover; cursor:zoom-in}
+  .photo.absente{display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; padding:6px; text-align:center;
+    background:var(--fond2); color:var(--gris); font-size:10.5px; font-weight:600; line-height:1.2}
+  .photo.absente span{font-size:20px}
+  .plan-absent{width:min(560px,86vw); padding:48px 24px; color:var(--gris); font-size:15px; text-align:center}
   .photo .x{position:absolute; top:3px; right:3px; width:24px; height:24px; border-radius:50%; background:rgba(0,0,0,.6); color:#fff; border:none; font-size:15px; line-height:24px; padding:0; cursor:pointer}
   .addphoto{
     width:84px; height:84px; border-radius:10px; border:1.5px dashed var(--gris); color:var(--gris);
@@ -241,6 +257,18 @@
   .toast.on{opacity:1; transform:translateX(-50%) translateY(0)}
   .zoom{position:fixed; inset:0; z-index:95; background:rgba(0,0,0,.88); display:flex; align-items:center; justify-content:center; cursor:zoom-out; padding:20px}
   .zoom img{max-width:100%; max-height:100%; border-radius:6px}
+  .sy-etat{display:flex; align-items:center; gap:9px; font-size:15px; font-weight:700; margin-bottom:6px}
+  .sy-etat .d{width:10px; height:10px; border-radius:50%; background:var(--vert); flex:0 0 auto}
+  .sy-etat.attente .d{background:var(--terra)} .sy-etat.erreur .d{background:var(--rouge)}
+  .sy-etat.encours .d{background:var(--bleu); animation:pulse 1s ease-in-out infinite}
+  .sy-code{
+    font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:25px; font-weight:800; letter-spacing:.06em;
+    text-align:center; background:var(--carte); border:1.5px dashed var(--bleu); border-radius:13px; padding:14px 6px; color:var(--brun);
+    -webkit-user-select:all; user-select:all; word-break:break-all;
+  }
+  input.t.code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:19px; letter-spacing:.06em; text-align:center; text-transform:uppercase}
+  .sy-txt{font-size:15px; margin:0 0 6px}
+  .btn-ghost.rouge{color:var(--rouge); border-color:#F3C9C9}
 
   /* ===== Grand écran (PC) ===== */
   @media (min-width:760px){
@@ -317,6 +345,7 @@
 <section id="vHome" class="wrap">
   <div id="installCard"></div>
   <div class="home-head"><h1>Mes chantiers</h1><button class="btn-sm" id="hNew">＋ Nouveau chantier</button></div>
+  <button class="sync-line off" id="syncLine"><span class="d"></span><span class="t" id="syncLineT">Synchroniser avec ton autre appareil</span><span class="chev">›</span></button>
   <div id="chList"></div>
   <p class="foot-note" id="homeNote"></p>
 </section>
@@ -494,9 +523,16 @@
     <label class="f">Nom</label><input class="t" id="mNom" placeholder="Prénom Nom">
     <label class="f">Fonction</label><input class="t" id="mFonction" placeholder="Ex : Conducteur de travaux">
     <label class="f">Société</label><input class="t" id="mSociete" placeholder="Nom de l'entreprise">
-    <p class="hint">Affiché en tête des comptes rendus et des PV. Reste sur cet appareil.</p>
+    <p class="hint">Affiché en tête des comptes rendus et des PV. Copié sur tes autres appareils si la synchronisation est active.</p>
   </div>
   <div class="sheet-foot"><button class="btn-primary" id="mSave">Enregistrer</button></div>
+</div>
+
+<!-- ===== Feuille synchronisation (contenu dynamique) ===== -->
+<div class="sheet-bg" id="bgSync"></div>
+<div class="sheet" id="shSync" role="dialog">
+  <div class="sheet-head"><span class="linkbtn"></span><span class="ttl">Synchronisation</span><button class="linkbtn r" id="syClose">Fermer</button></div>
+  <div class="sheet-body" id="syBody"></div>
 </div>
 
 <!-- ===== Feuille menu (contenu dynamique) ===== -->
@@ -517,9 +553,10 @@
 /* ==================================================================
    OPR Chantier — V3 : plusieurs chantiers, suivi de chantier (visites,
    points, comptes rendus) + OPR (réserves, PV). Hors ligne, données
-   stockées sur l'appareil uniquement (IndexedDB).
+   stockées sur l'appareil (IndexedDB) ; V3.1 : synchronisation
+   chiffrée de bout en bout entre les appareils (optionnelle).
    ================================================================== */
-const VERSION = '3.0';
+const VERSION = '3.1';
 
 /* ---------- IndexedDB (clé → valeur) ---------- */
 const IDB = (() => {
@@ -568,7 +605,8 @@ function newChantier(){
   return { id:genId('c'), v:3, nom:'', adresse:'', ref:'', moa:'', moe:'', entreprises:'',
     created:todayISO(), updated:Date.now(), lastModule:'suivi', plans:[],
     opr:{date:'', presents:'', obs:'', seq:0, reserves:[]},
-    suivi:{seq:0, vseq:0, cur:null, visites:[], points:[]} };
+    suivi:{seq:0, vseq:0, cur:null, visites:[], points:[]},
+    ut:{infos:0, opr:0}, del:{} };   // ut : dates de modif des infos / de la séance OPR ; del : éléments supprimés (synchro)
 }
 
 /* Nettoyage de toute donnée venant d'un fichier ou d'une ancienne version (entrée non fiable). */
@@ -578,13 +616,19 @@ const N = v => Number.isFinite(+v) ? +v : 0;
 const ID = (v,p) => { const s=String(v||'').replace(/[^\w-]/g,'').slice(0,64); return s || genId(p); };
 const ONE = (v,list,def) => list.includes(v) ? v : def;
 const IMG = v => typeof v==='string' && /^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/.test(v);
+const REF = v => typeof v==='string' && /^#[0-9a-f]{32}$/.test(v);   // image restée sur l'autre appareil (synchro)
 const PCT = v => (v==null || v==='' || !Number.isFinite(+v)) ? null : Math.max(0,Math.min(100,+v));
 function cleanBase(o){
   o=o||{};
   const planId=o.planId!=null && o.planId!=='' ? ID(o.planId,'p') : null, px=PCT(o.px), py=PCT(o.py);
   return { id:ID(o.id,'i'), num:N(o.num), niveau:S(o.niveau,200), local:S(o.local,200), empl:S(o.empl,300), lot:S(o.lot,300),
-    desc:S(o.desc), photos:Array.isArray(o.photos)?o.photos.filter(IMG).slice(0,30):[], created:D(o.created),
-    planId:(planId && px!=null && py!=null)?planId:null, px:(planId&&px!=null&&py!=null)?px:null, py:(planId&&px!=null&&py!=null)?py:null };
+    desc:S(o.desc), photos:Array.isArray(o.photos)?o.photos.filter(p=>IMG(p)||REF(p)).slice(0,30):[], created:D(o.created),
+    planId:(planId && px!=null && py!=null)?planId:null, px:(planId&&px!=null&&py!=null)?px:null, py:(planId&&px!=null&&py!=null)?py:null, u:N(o.u) };
+}
+function cleanDel(o){
+  const r={}; if(!o || typeof o!=='object') return r;
+  Object.keys(o).slice(-5000).forEach(k=>{ if(/^[\w-]{1,64}$/.test(k) && Number.isFinite(+o[k])) r[k]=+o[k]; });
+  return r;
 }
 function cleanReserve(o){ const b=cleanBase(o);
   return Object.assign(b,{ gravite:ONE(o.gravite,['mineure','majeure','bloquante'],'mineure'), statut:ONE(o.statut,['lever','levee'],'lever'),
@@ -595,13 +639,14 @@ function cleanPoint(o){ const b=cleanBase(o);
     visiteId:o.visiteId?ID(o.visiteId,'v'):'', doneVisiteId:o.doneVisiteId?ID(o.doneVisiteId,'v'):'', reserveId:o.reserveId?ID(o.reserveId,'i'):'' }); }
 function cleanVisite(o){ o=o||{};
   return { id:ID(o.id,'v'), num:N(o.num), date:D(o.date), meteo:S(o.meteo,100), effectifs:S(o.effectifs,500),
-    presents:S(o.presents,2000), avancement:S(o.avancement), prochaine:D(o.prochaine) }; }
+    presents:S(o.presents,2000), avancement:S(o.avancement), prochaine:D(o.prochaine), u:N(o.u) }; }
 function cleanChantier(o){
   o=o||{}; const c=newChantier();
   c.id=ID(o.id,'c'); c.nom=S(o.nom,200); c.adresse=S(o.adresse,300); c.ref=S(o.ref,200); c.moa=S(o.moa,300); c.moe=S(o.moe,300);
   c.entreprises=S(o.entreprises,4000); c.created=D(o.created)||todayISO(); c.updated=N(o.updated)||Date.now();
   c.lastModule=ONE(o.lastModule,['suivi','opr'],'suivi');
-  c.plans=(Array.isArray(o.plans)?o.plans:[]).filter(p=>p&&IMG(p.img)).map(p=>({id:ID(p.id,'p'),nom:S(p.nom,100)||'Plan',img:p.img}));
+  c.plans=(Array.isArray(o.plans)?o.plans:[]).filter(p=>p&&(IMG(p.img)||REF(p.img))).map(p=>({id:ID(p.id,'p'),nom:S(p.nom,100)||'Plan',img:p.img,u:N(p.u)}));
+  c.ut={infos:N((o.ut||{}).infos), opr:N((o.ut||{}).opr)}; c.del=cleanDel(o.del);
   const op=o.opr||{}, su=o.suivi||{};
   c.opr={ date:D(op.date), presents:S(op.presents,2000), obs:S(op.obs), reserves:(Array.isArray(op.reserves)?op.reserves:[]).map(cleanReserve), seq:0 };
   c.opr.seq=Math.max(N(op.seq), ...c.opr.reserves.map(r=>r.num), 0);
@@ -633,9 +678,35 @@ function summary(c){
     aLever:c.opr.reserves.filter(r=>r.statut!=='levee').length, nbPoints:c.suivi.points.length,
     derniere: lastV?{num:lastV.num,date:lastV.date}:null, oprDate:c.opr.date };
 }
-async function saveIdx(){ await IDB.set('idx', idx); }
+async function saveIdx(){ await IDB.set('idx', idx); planifierSync(); }
+
+/* Empreintes des éléments du chantier ouvert : à chaque enregistrement, un élément modifié reçoit sa date (u),
+   un élément supprimé laisse une trace (del). C'est ce qui permet de fusionner le travail de deux appareils. */
+const FP=new Map();
+function empreinte(x){
+  return JSON.stringify(x,(k,v)=> k==='u' ? undefined
+    : (k==='photos' && Array.isArray(v)) ? v.map(p=>String(p).length+':'+String(p).slice(-24))
+    : (k==='img' && typeof v==='string') ? v.length+':'+v.slice(-24) : v);
+}
+const elements = c => [...c.plans, ...c.opr.reserves, ...c.suivi.visites, ...c.suivi.points];
+const groupeInfos = c => JSON.stringify([c.nom,c.adresse,c.ref,c.moa,c.moe,c.entreprises]);
+const groupeOpr = c => JSON.stringify([c.opr.date,c.opr.presents,c.opr.obs]);
+function noterEmpreintes(c){
+  FP.clear(); if(!c) return;
+  for(const it of elements(c)) FP.set(it.id,empreinte(it));
+  FP.set('#infos',groupeInfos(c)); FP.set('#opr',groupeOpr(c));
+}
+function marquerChangements(c){
+  const t=Date.now(), vus=new Set(['#infos','#opr']);
+  for(const it of elements(c)){ vus.add(it.id); const e=empreinte(it); if(FP.get(it.id)!==e){ it.u=t; FP.set(it.id,e); } }
+  for(const id of [...FP.keys()]) if(!vus.has(id)){ c.del[id]=t; FP.delete(id); }
+  const gi=groupeInfos(c), go=groupeOpr(c);
+  if(FP.get('#infos')!==gi){ c.ut.infos=t; FP.set('#infos',gi); }
+  if(FP.get('#opr')!==go){ c.ut.opr=t; FP.set('#opr',go); }
+}
+
 let saveT=null, saving=Promise.resolve();
-function persist(){ if(!ch) return; ch.updated=Date.now(); clearTimeout(saveT); saveT=setTimeout(flush,200); }
+function persist(){ if(!ch) return; ch.updated=Date.now(); marquerChangements(ch); clearTimeout(saveT); saveT=setTimeout(flush,200); }
 function flush(){
   clearTimeout(saveT); saveT=null; if(!ch) return saving;
   const c=ch;
@@ -656,6 +727,7 @@ window.addEventListener('pagehide',()=>{ if(saveT) flush(); });
 
 async function boot(){
   let i=null;
+  try{ const s=await IDB.get('sync'); if(s && lireCode(s.code)) sync=Object.assign(nouvelleSync(s.code),s); }catch(e){}
   try{ i=await IDB.get('idx'); }catch(e){ toast('⚠️ Stockage indisponible sur ce navigateur'); }
   if(!i || !Array.isArray(i.chantiers)){
     i={v:3, chantiers:[], settings:{}};
@@ -670,6 +742,8 @@ async function boot(){
   idx={ v:3, chantiers:i.chantiers.filter(x=>x&&x.id), settings:Object.assign({nom:'',fonction:'',societe:''}, i.settings||{}) };
   const last=sessionGet('ouvert');
   if(last && idx.chantiers.some(x=>x.id===last)) await openChantier(last,true); else showHome();
+  if(sync) deriverCles(sync.code).then(k=>{ syncCles=k; synchroniser(); })
+    .catch(()=>{ syncEtat.erreur='chiffrement indisponible sur ce navigateur'; afficherEtatSync(); });
 }
 function sessionGet(k){ try{ return sessionStorage.getItem('opr.'+k); }catch(e){ return null; } }
 function sessionSet(k,v){ try{ v==null?sessionStorage.removeItem('opr.'+k):sessionStorage.setItem('opr.'+k,v); }catch(e){} }
@@ -700,8 +774,9 @@ function renderHome(){
       ${s.adresse?`<div class="cc-adr">${esc(s.adresse)}</div>`:''}<div class="cc-tags">${tags.join('')}</div><div class="cc-meta">${meta}</div></button>`;
   }).join('') : `<div class="vide-msg"><div class="big">🏗️</div>Aucun chantier pour l'instant.<br>Crée ton premier chantier pour suivre tes visites et faire tes OPR.</div>`;
   $$('#chList .ccard').forEach(b=>b.onclick=()=>openChantier(b.dataset.id));
-  $('#homeNote').textContent=`Données enregistrées sur cet appareil uniquement · version ${VERSION}`;
-  renderInstall();
+  $('#homeNote').textContent = sync ? `Synchronisé entre tes appareils, chiffré de bout en bout · version ${VERSION}`
+    : `Données enregistrées sur cet appareil uniquement · version ${VERSION}`;
+  afficherEtatSync(); renderInstall();
 }
 
 /* ---------- Installation ---------- */
@@ -728,7 +803,7 @@ async function openChantier(id, silent){
   let c=null;
   try{ c=await IDB.get('ch:'+id); }catch(e){}
   if(!c){ if(!silent) toast('Chantier introuvable'); idx.chantiers=idx.chantiers.filter(x=>x.id!==id); await saveIdx(); return showHome(); }
-  ch=cleanChantier(c); closeAllSheets(); setPlacing(false);
+  ch=cleanChantier(c); noterEmpreintes(ch); closeAllSheets(); setPlacing(false);
   ui.module=ch.lastModule||'suivi'; ui.view='liste'; ui.lot=''; ui.planId=ch.plans[0]?ch.plans[0].id:null; view._init=false;
   sessionSet('ouvert',ch.id);
   $('#vHome').hidden=true; $('#vCh').hidden=false; $('#chHead').hidden=false;
@@ -831,7 +906,7 @@ function renderListe(){
 }
 function carte(m,it){
   const loc=[it.niveau,it.local,it.empl].filter(Boolean).join(' · ');
-  const vign=it.photos[0]?`<img class="vign" src="${it.photos[0]}" alt="">`:`<div class="vign">📷</div>`;
+  const p0=it.photos.find(IMG), vign=p0?`<img class="vign" src="${p0}" alt="">`:`<div class="vign">📷</div>`;
   const np=it.photos.length, plan=it.planId?`<span class="pin-badge">📍 plan</span>`:'';
   let tag, st, extra='';
   if(m==='opr'){
@@ -891,6 +966,7 @@ function renderPlan(){
   $('#planEmpty').hidden=true; stage.hidden=false; tabs.hidden=false; ui.planId=plan.id;
   sizeStage();
   const m=ui.module;
+  if(!IMG(plan.img)){ canvas.innerHTML=`<div class="plan-absent">Ce plan n'est pas encore arrivé sur cet appareil : il arrivera à la prochaine synchronisation.</div>`; return; }
   canvas.innerHTML=`<img id="planImg" src="${plan.img}" alt="">`;
   const img=$('#planImg');
   const pins=MODS[m].arr(ch).filter(it=>it.planId===plan.id && it.px!=null && matchFiltre(it));
@@ -1072,7 +1148,7 @@ function compress(file,max,q){
 }
 
 /* ======================= FEUILLES ======================= */
-const SHEETS=['Item','Chantier','Visite','Opr','Moi','Menu'];
+const SHEETS=['Item','Chantier','Visite','Opr','Moi','Menu','Sync'];
 function openSheet(n){ const bg=$('#bg'+n); bg._ouvert=performance.now(); bg.classList.add('on'); $('#sh'+n).classList.add('on'); }
 function closeSheet(n){ $('#bg'+n).classList.remove('on'); $('#sh'+n).classList.remove('on'); }
 function anySheetOpen(){ return SHEETS.some(n=>$('#sh'+n).classList.contains('on')); }
@@ -1098,6 +1174,7 @@ $('#btnMenu').onclick=()=>ch?menuChantier():menuHome();
 
 function menuHome(){
   openMenu('Menu',[
+    {ic:'🔄', t:'Synchronisation téléphone ↔ PC', s:sync?resumeSync().t:'Retrouver tes chantiers sur tous tes appareils', fn:ouvrirSync},
     {ic:'👤', t:'Rédacteur des documents', s:idx.settings.nom?`${idx.settings.nom}${idx.settings.societe?' — '+idx.settings.societe:''}`:'Ton nom et ta société sur les CR et PV', fn:openMoi},
     {ic:'📥', t:'Importer un chantier ou une sauvegarde', s:'Fichier .json venant d\'un autre appareil', fn:()=>$('#importFile').click()},
     {ic:'💾', t:'Sauvegarde complète', s:'Tous les chantiers, photos et plans dans un fichier', fn:backupAll},
@@ -1116,11 +1193,11 @@ function menuChantier(){
     {ic:'🗺️', t:'Importer un plan', s:'PDF, photo ou capture d\'écran', fn:()=>$('#planFile').click()},
     {ic:'🏗️', t:'Infos du chantier', s:'Adresse, MOA, MOE, entreprises', fn:()=>openChantierSheet(false)},
     {ic:'📤', t:'Envoyer ce chantier vers un autre appareil', s:'Fichier à ouvrir dans l\'appli sur le PC ou le téléphone', fn:exportChantier},
-    {ic:'🗑️', t:'Supprimer ce chantier', s:'Définitif sur cet appareil — envoie-le d\'abord en copie', danger:true, fn:deleteChantier},
+    {ic:'🗑️', t:'Supprimer ce chantier', s:sync&&sync.docs[ch.id]?'Définitif, sur tous tes appareils synchronisés':'Définitif sur cet appareil — envoie-le d\'abord en copie', danger:true, fn:deleteChantier},
   ]);
 }
 async function storeInfo(){
-  let t=`Données stockées sur cet appareil uniquement (${idx.chantiers.length} chantier${idx.chantiers.length>1?'s':''}).`;
+  let t=`Données stockées sur cet appareil${sync?' et copiées, chiffrées, vers tes autres appareils':' uniquement'} (${idx.chantiers.length} chantier${idx.chantiers.length>1?'s':''}).`;
   try{ if(navigator.storage&&navigator.storage.estimate){ const {usage}=await navigator.storage.estimate(); t+=' '+(usage/1048576).toFixed(1)+' Mo utilisés.'; } }catch(e){}
   try{ if(navigator.storage&&navigator.storage.persisted&&await navigator.storage.persisted()) t+=' Stockage protégé ✓'; }catch(e){}
   const el=$('#storeInfo'); if(el) el.textContent=t;
@@ -1171,7 +1248,9 @@ function renderPlanLink(){
 }
 function renderEditPhotos(){
   const box=$('#iPhotos');
-  box.innerHTML=edit.photos.map((p,i)=>`<div class="photo"><img src="${p}" data-i="${i}" alt="Photo ${i+1}"><button class="x" data-i="${i}" aria-label="Retirer la photo">×</button></div>`).join('')
+  box.innerHTML=edit.photos.map((p,i)=>IMG(p)
+      ? `<div class="photo"><img src="${p}" data-i="${i}" alt="Photo ${i+1}"><button class="x" data-i="${i}" aria-label="Retirer la photo">×</button></div>`
+      : `<div class="photo absente" title="Photo prise sur ton autre appareil, effacée du serveur après 60 jours"><span>📱</span>Sur l'autre appareil<button class="x" data-i="${i}" aria-label="Retirer la photo">×</button></div>`).join('')
     + `<button class="addphoto" id="iAddCam"><span class="pic">📷</span>Photo</button><button class="addphoto" id="iAddGal"><span class="pic">🖼️</span>Galerie</button>`;
   $$('#iPhotos .x').forEach(b=>b.onclick=()=>{ edit.photos.splice(+b.dataset.i,1); renderEditPhotos(); });
   $$('#iPhotos .photo img').forEach(im=>im.onclick=()=>zoomImg(im.src));
@@ -1263,8 +1342,11 @@ $('#cSave').onclick=async()=>{
 };
 $('#cCancel').onclick=()=>closeSheet('Chantier');
 async function deleteChantier(){
-  if(!confirm(`Supprimer définitivement « ${ch.nom||'ce chantier'} » de cet appareil ?\n\nPoints, réserves, photos et plans seront effacés.`)) return;
+  const partout = sync && sync.docs[ch.id];
+  if(!confirm(`Supprimer définitivement « ${ch.nom||'ce chantier'} »${partout?'':' de cet appareil'} ?\n\nPoints, réserves, photos et plans seront effacés.`
+    + (partout?'\nIl sera aussi supprimé sur tes autres appareils synchronisés.':''))) return;
   const id=ch.id; clearTimeout(saveT); saveT=null; ch=null;
+  if(partout && !sync.suppr.includes(id)){ sync.suppr.push(id); await sauverSync(); }
   try{ await IDB.del('ch:'+id); }catch(e){}
   idx.chantiers=idx.chantiers.filter(x=>x.id!==id); await saveIdx();
   showHome(); toast('Chantier supprimé');
@@ -1317,7 +1399,7 @@ $('#oCancel').onclick=()=>closeSheet('Opr');
 
 /* ---------- Rédacteur ---------- */
 function openMoi(){ const s=idx.settings; $('#mNom').value=s.nom||''; $('#mFonction').value=s.fonction||''; $('#mSociete').value=s.societe||''; openSheet('Moi'); }
-$('#mSave').onclick=async()=>{ idx.settings={nom:$('#mNom').value.trim(), fonction:$('#mFonction').value.trim(), societe:$('#mSociete').value.trim()}; await saveIdx(); closeSheet('Moi'); toast('Enregistré'); };
+$('#mSave').onclick=async()=>{ idx.settings={nom:$('#mNom').value.trim(), fonction:$('#mFonction').value.trim(), societe:$('#mSociete').value.trim(), maj:Date.now()}; await saveIdx(); closeSheet('Moi'); toast('Enregistré'); };
 $('#mCancel').onclick=()=>closeSheet('Moi');
 
 /* ======================= EXPORTS ======================= */
@@ -1356,7 +1438,7 @@ function enTete(kicker,titre){
 }
 function metaRows(rows){ return `<table class="meta">${rows.filter(r=>r[1]).map(([k,v])=>`<tr><td class="k">${k}</td><td>${v}</td></tr>`).join('')}</table>`; }
 function locOf(it){ return esc([it.niveau,it.local,it.empl].filter(Boolean).join(' / ')||'—'); }
-function photosOf(it){ return it.photos.map(p=>`<img class="pvphoto" src="${p}" alt="">`).join(''); }
+function photosOf(it){ return it.photos.filter(IMG).map(p=>`<img class="pvphoto" src="${p}" alt="">`).join(''); }
 const multiline = s => esc(s).replace(/\n/g,'<br>');
 async function imprimer(titre){
   const pv=$('#pv');
@@ -1490,6 +1572,384 @@ $('#importFile').onchange=e=>{
   };
   rd.readAsText(f);
 };
+
+/* ======================= SYNCHRONISATION ======================= */
+/* Relais Supabase (serveur/synchro.sql). Chaque appareil chiffre ses chantiers et ses images (AES-GCM, clés
+   tirées du code de synchro par PBKDF2) avant l'envoi : le serveur ne voit que du chiffré. Un chantier part
+   sans ses images ; chaque image part une seule fois, désignée par son empreinte. Si les deux appareils ont
+   modifié le même chantier, les deux versions sont fusionnées élément par élément (rien n'est perdu). */
+const SY = { url:'https://mcosgvcdclcxxytzplcs.supabase.co/rest/v1/rpc/', cle:'sb_publishable_X5fumnTJVfZCCU_kbyTo6w_q_Wz0fPS' };
+const B32 = '0123456789ABCDEFGHJKMNPQRSTVWXYZ';          // base 32 de Crockford : pas de I, L, O, U
+const EDITION = ['Item','Chantier','Visite','Opr','Moi']; // pas de réception sur ce qu'on est en train de saisir
+const saisieEnCours = () => EDITION.some(n=>$('#sh'+n).classList.contains('on'));
+let sync = null;       // {code, rev, docs:{id:{rev,upd}}, suppr:[id], absentes:{h:1}, dernier}
+let syncCles = null;   // {acces, aes, hmac}
+const syncEtat = { encours:false, erreur:'', msg:'' };
+const differes = new Set();   // chantiers reçus mais pas encore appliqués (saisie en cours dessus)
+let syncP=null, syncRelance=false, syncT=null;
+const nouvelleSync = code => ({code, rev:0, docs:{}, suppr:[], absentes:{}, dernier:0});
+
+async function sauverSync(){ try{ if(sync) await IDB.set('sync',sync); else await IDB.del('sync'); }catch(e){} }
+function nouveauCode(){ return [...crypto.getRandomValues(new Uint8Array(16))].map(x=>B32[x&31]).join(''); }
+function lireCode(s){
+  const c=String(s||'').toUpperCase().replace(/O/g,'0').replace(/[IL]/g,'1').replace(/U/g,'V').replace(/[^0-9A-Z]/g,'');
+  return c.length===16 && [...c].every(x=>B32.includes(x)) ? c : null;
+}
+const formatCode = c => c.match(/.{4}/g).join('-');
+
+/* ---------- Chiffrement ---------- */
+const hex = u8 => [...u8].map(x=>x.toString(16).padStart(2,'0')).join('');
+function b64(u8){ let s=''; for(let i=0;i<u8.length;i+=0x8000) s+=String.fromCharCode.apply(null,u8.subarray(i,i+0x8000)); return btoa(s); }
+function unb64(s){ const b=atob(s), u=new Uint8Array(b.length); for(let i=0;i<b.length;i++) u[i]=b.charCodeAt(i); return u; }
+async function deriverCles(code){
+  const enc=new TextEncoder();
+  const base=await crypto.subtle.importKey('raw',enc.encode(code),'PBKDF2',false,['deriveBits']);
+  const bits=new Uint8Array(await crypto.subtle.deriveBits({name:'PBKDF2',hash:'SHA-256',salt:enc.encode('opr-chantier/synchro/v1'),iterations:250000},base,768));
+  return { acces:hex(bits.subarray(0,32)),   // seule partie envoyée au serveur (qui n'en garde que l'empreinte)
+    aes:await crypto.subtle.importKey('raw',bits.slice(32,64),'AES-GCM',false,['encrypt','decrypt']),
+    hmac:await crypto.subtle.importKey('raw',bits.slice(64,96),{name:'HMAC',hash:'SHA-256'},false,['sign']) };
+}
+async function chiffrer(u8){
+  const iv=crypto.getRandomValues(new Uint8Array(12));
+  const ct=new Uint8Array(await crypto.subtle.encrypt({name:'AES-GCM',iv},syncCles.aes,u8));
+  const out=new Uint8Array(12+ct.length); out.set(iv); out.set(ct,12); return b64(out);
+}
+async function dechiffrer(s){ const u=unb64(s); return new Uint8Array(await crypto.subtle.decrypt({name:'AES-GCM',iv:u.subarray(0,12)},syncCles.aes,u.subarray(12))); }
+const chiffrerJson = o => chiffrer(new TextEncoder().encode(JSON.stringify(o)));
+const dechiffrerJson = async s => JSON.parse(new TextDecoder().decode(await dechiffrer(s)));
+
+/* Images : empreinte HMAC (le serveur ne peut pas reconnaître une image), puis 1 octet de type + l'image, chiffrés */
+const MIMES=['image/jpeg','image/png','image/webp'];
+const empreintes=new Map();
+async function empreinteImg(d){
+  let h=empreintes.get(d); if(h) return h;
+  h=hex(new Uint8Array(await crypto.subtle.sign('HMAC',syncCles.hmac,new TextEncoder().encode(d))).subarray(0,16));
+  if(empreintes.size>600) empreintes.clear();
+  empreintes.set(d,h); return h;
+}
+function chiffrerImage(d){
+  const m=/^data:(image\/(?:jpeg|png|webp));base64,(.*)$/.exec(d); if(!m) return Promise.resolve(null);
+  const b=unb64(m[2]), u=new Uint8Array(b.length+1); u[0]=MIMES.indexOf(m[1]); u.set(b,1); return chiffrer(u);
+}
+async function dechiffrerImage(s){
+  const u=await dechiffrer(s), mime=MIMES[u[0]]; if(!mime) return null;
+  const d='data:'+mime+';base64,'+b64(u.subarray(1)); return IMG(d)?d:null;
+}
+const imagesDe = c => [...c.plans.map(p=>p.img), ...c.opr.reserves.flatMap(r=>r.photos), ...c.suivi.points.flatMap(p=>p.photos)].filter(IMG);
+
+/* ---------- Chantier ⇄ document échangé (images remplacées par « #empreinte ») ---------- */
+/* Une image absente de cet appareil (photo de plus de 60 jours, effacée du serveur) reste « #empreinte » :
+   l'appareil qui a la photo la garde, rien n'est supprimé par la synchro. */
+async function versDoc(c){
+  const imgs=new Map(), plans=new Set();
+  const ref=async d=>{ if(REF(d)) return d; const h=await empreinteImg(d); imgs.set(h,d); return '#'+h; };
+  const photos=async a=>{ const r=[]; for(const p of a) r.push(await ref(p)); return r; };
+  const o=Object.assign({},c,{plans:[], opr:Object.assign({},c.opr,{reserves:[]}), suivi:Object.assign({},c.suivi,{points:[]})});
+  for(const p of c.plans){ const x=await ref(p.img); if(IMG(p.img)) plans.add(x.slice(1)); o.plans.push(Object.assign({},p,{img:x})); }
+  for(const r of c.opr.reserves) o.opr.reserves.push(Object.assign({},r,{photos:await photos(r.photos)}));
+  for(const p of c.suivi.points) o.suivi.points.push(Object.assign({},p,{photos:await photos(p.photos)}));
+  return {doc:o, imgs, plans};
+}
+function refsDoc(o){
+  const s=new Set(), add=x=>{ if(typeof x==='string' && /^#[0-9a-f]{32}$/.test(x)) s.add(x.slice(1)); };
+  (o.plans||[]).forEach(p=>add(p&&p.img));
+  [...((o.opr||{}).reserves||[]), ...((o.suivi||{}).points||[])].forEach(it=>((it&&it.photos)||[]).forEach(add));
+  return s;
+}
+function depuisDoc(o,imgs){
+  const r=x=>REF(x) ? (imgs.get(x.slice(1))||x) : x;
+  const fix=it=>Object.assign({},it,{photos:((it&&it.photos)||[]).map(r)});
+  return cleanChantier(Object.assign({},o,{
+    plans:(o.plans||[]).map(p=>Object.assign({},p,{img:r(p&&p.img)})),
+    opr:Object.assign({},o.opr,{reserves:((o.opr||{}).reserves||[]).map(fix)}),
+    suivi:Object.assign({},o.suivi,{points:((o.suivi||{}).points||[]).map(fix)}) }));
+}
+
+/* ---------- Fusion de deux versions d'un même chantier ---------- */
+function fusionListe(a,b,del,aGagne){
+  const m=new Map(a.map(x=>[x.id,x]));
+  for(const it of b){ const x=m.get(it.id); if(!x || (it.u||0)>(x.u||0) || ((it.u||0)===(x.u||0) && !aGagne)) m.set(it.id,it); }
+  return [...m.values()].filter(it=>!(del[it.id]>=(it.u||0)));
+}
+function renumeroter(arr,obj,cle){   // deux appareils ont créé le même numéro hors ligne : le plus récent prend le suivant
+  const vus=new Set(), t=Date.now();
+  [...arr].sort((x,y)=>(x.num-y.num)||((x.u||0)-(y.u||0))).forEach(it=>{ if(vus.has(it.num)){ obj[cle]+=1; it.num=obj[cle]; it.u=t; } vus.add(it.num); });
+}
+function fusion(L,R){
+  const lGagne=(L.updated||0)>=(R.updated||0);
+  const c=cleanChantier(lGagne?L:R);
+  const I=(L.ut.infos||0)>=(R.ut.infos||0)?L:R, O=(L.ut.opr||0)>=(R.ut.opr||0)?L:R;
+  ['nom','adresse','ref','moa','moe','entreprises'].forEach(k=>{ c[k]=I[k]; });
+  c.ut.infos=I.ut.infos; c.opr.date=O.opr.date; c.opr.presents=O.opr.presents; c.opr.obs=O.opr.obs; c.ut.opr=O.ut.opr;
+  const del=Object.assign({},L.del); for(const k in R.del) del[k]=Math.max(del[k]||0,R.del[k]);
+  c.del=del;
+  c.plans=fusionListe(L.plans,R.plans,del,lGagne);
+  c.opr.reserves=fusionListe(L.opr.reserves,R.opr.reserves,del,lGagne);
+  c.suivi.visites=fusionListe(L.suivi.visites,R.suivi.visites,del,lGagne);
+  c.suivi.points=fusionListe(L.suivi.points,R.suivi.points,del,lGagne);
+  c.opr.seq=Math.max(L.opr.seq,R.opr.seq); c.suivi.seq=Math.max(L.suivi.seq,R.suivi.seq); c.suivi.vseq=Math.max(L.suivi.vseq,R.suivi.vseq);
+  const f=cleanChantier(c);
+  renumeroter(f.opr.reserves,f.opr,'seq'); renumeroter(f.suivi.points,f.suivi,'seq'); renumeroter(f.suivi.visites,f.suivi,'vseq');
+  f.updated=Date.now(); return f;
+}
+
+/* ---------- Échanges avec le serveur ---------- */
+async function rpc(fn,args){
+  const ctl=new AbortController(), t=setTimeout(()=>ctl.abort(),90000);
+  try{
+    const r=await fetch(SY.url+fn,{method:'POST',headers:{'apikey':SY.cle,'Content-Type':'application/json'},body:JSON.stringify(args),signal:ctl.signal,cache:'no-store'});
+    if(!r.ok) throw Object.assign(new Error(r.status>=500?'serveur de synchro indisponible':'refus du serveur ('+r.status+')'),{serveur:true});
+    return await r.json();
+  }catch(e){ if(e.serveur) throw e; throw new Error('Pas de réseau'); }
+  finally{ clearTimeout(t); }
+}
+function erreurServeur(r){
+  const m={inconnu:'code inconnu sur le serveur', plein:'espace en ligne plein', limite:'le serveur refuse un nouvel espace', taille:'élément trop volumineux'};
+  return new Error(m[r&&r.erreur]||'erreur du serveur');
+}
+function modifieIci(id){
+  const u=(ch&&ch.id===id) ? ch.updated : (idx.chantiers.find(x=>x.id===id)||{}).updated;
+  return u!=null && (!sync.docs[id] || sync.docs[id].upd!==u);
+}
+function enAttente(){
+  if(!sync) return 0;
+  return sync.suppr.length + idx.chantiers.filter(s=>{ const d=sync.docs[s.id]; return !d || d.upd!==s.updated; }).length;
+}
+
+/* Renvoie true (appliqué), false (rien à faire) ou 'attente' (saisie en cours sur ce chantier : à reprendre plus tard). */
+async function appliquerDistant(rd){
+  const id=rd.id, d=sync.docs[id];
+  if(d && d.rev>=rd.rev) return false;
+  if(id==='_reglages'){
+    if(rd.supprime || !rd.data) return false;
+    if($('#shMoi').classList.contains('on')) return 'attente';
+    const s=(await dechiffrerJson(rd.data)).s||{}, lm=idx.settings.maj||0, rm=+s.maj||0;
+    if(rm>lm){ idx.settings={nom:S(s.nom,100), fonction:S(s.fonction,100), societe:S(s.societe,150), maj:rm}; sync.docs[id]={rev:rd.rev, upd:rm}; return true; }
+    sync.docs[id]={rev:rd.rev, upd: lm>rm ? null : lm}; return false;
+  }
+  const s=idx.chantiers.find(x=>x.id===id);
+  if(rd.supprime){
+    sync.suppr=sync.suppr.filter(x=>x!==id);
+    if(!s){ delete sync.docs[id]; return false; }
+    if(modifieIci(id)){ sync.docs[id]={rev:rd.rev, upd:null}; return false; }   // modifié ici depuis : on le garde (il repartira)
+    if(ch && ch.id===id){ if(saisieEnCours()) return 'attente'; clearTimeout(saveT); saveT=null; ch=null; noterEmpreintes(null); await showHome(); }
+    try{ await IDB.del('ch:'+id); }catch(e){}
+    idx.chantiers=idx.chantiers.filter(x=>x.id!==id); delete sync.docs[id];
+    toast(`« ${s.nom||'Chantier'} » a été supprimé sur ton autre appareil`);
+    return true;
+  }
+  const o=await dechiffrerJson(rd.data);
+  if(!o || o.f!=='opr-sync' || !o.c) return false;
+  // images : celles déjà sur l'appareil, puis les manquantes depuis le serveur (sauf celles qu'il n'a plus)
+  const besoin=refsDoc(o.c), imgs=new Map();
+  let stocke=null; try{ stocke=await IDB.get('ch:'+id); }catch(e){}
+  if(stocke && besoin.size) for(const x of imagesDe(cleanChantier(stocke))){ const h=await empreinteImg(x); if(besoin.has(h)) imgs.set(h,x); }
+  const manque=[...besoin].filter(h=>!imgs.has(h) && !sync.absentes[h]);
+  for(let i=0;i<manque.length;i+=6){
+    etatSync(`Réception des photos et plans ${Math.min(i+6,manque.length)}/${manque.length}…`);
+    const lot=manque.slice(i,i+6), r=await rpc('opr_images_lire',{p_cle:syncCles.acces, p_h:lot});
+    if(!r.ok) throw erreurServeur(r);
+    for(const h in r.images){ const x=await dechiffrerImage(r.images[h]); if(x){ imgs.set(h,x); empreintes.set(x,h); } }
+    lot.forEach(h=>{ if(!imgs.has(h)) sync.absentes[h]=1; });   // effacée du serveur : elle reste sur l'autre appareil
+  }
+  const distant=depuisDoc(Object.assign({},o.c,{id}),imgs);
+  let x=null; if(!(ch&&ch.id===id)){ try{ x=await IDB.get('ch:'+id); }catch(e){} }
+  // --- à partir d'ici, aucune attente avant de modifier ch : l'état lu est le plus récent ---
+  const ouvert = ch && ch.id===id;
+  if(ouvert && saisieEnCours()) return 'attente';   // un formulaire ouvert garde sa propre copie : on attend sa fermeture
+  const cur = ouvert ? ch : (x?cleanChantier(x):null);
+  let res=distant, upd=distant.updated;
+  if(cur && modifieIci(id)){ res=fusion(cur,distant); upd=null; }
+  sync.suppr=sync.suppr.filter(x=>x!==id);   // modifié ailleurs après une suppression ici : on le garde
+  if(ouvert){ clearTimeout(saveT); saveT=null; ch=res; noterEmpreintes(ch); }
+  await IDB.set('ch:'+id,res);
+  sync.docs[id]={rev:rd.rev, upd};           // seulement une fois le chantier enregistré sur l'appareil
+  const sm=summary(res), i=idx.chantiers.findIndex(x=>x.id===id); if(i>=0) idx.chantiers[i]=sm; else idx.chantiers.push(sm);
+  if(ouvert && ch===res){
+    if(!ch.plans.some(p=>p.id===ui.planId)){ ui.planId=ch.plans[0]?ch.plans[0].id:null; view._init=false; }
+    render();
+  }
+  return true;
+}
+async function tirer(){
+  const r=await rpc('opr_tirer',{p_cle:syncCles.acces, p_depuis:sync.rev});
+  if(!r.ok) throw erreurServeur(r);
+  let max=sync.rev, borne=Infinity, change=false;
+  differes.clear();
+  for(const rd of r.docs){
+    const a=await appliquerDistant(rd);
+    if(a==='attente'){ differes.add(rd.id); borne=Math.min(borne,rd.rev); } else if(a) change=true;
+    max=Math.max(max,rd.rev);
+  }
+  sync.rev=Math.min(max,borne-1);   // un chantier différé sera redemandé au prochain tirage
+  if(change){ await IDB.set('idx',idx); if(!ch) renderHome(); }
+  await sauverSync();
+}
+function conflit(r){ syncRelance=true; sync.rev=Math.max(0,Math.min(sync.rev,(r.rev||1)-1)); }
+async function pousser(){
+  const cle=syncCles.acces;
+  for(const id of [...sync.suppr]){
+    const d=sync.docs[id];
+    if(!d){ sync.suppr=sync.suppr.filter(x=>x!==id); continue; }
+    const r=await rpc('opr_pousser',{p_cle:cle, p_id:id, p_base:d.rev, p_data:null, p_supprime:true});
+    if(r.ok){ delete sync.docs[id]; sync.suppr=sync.suppr.filter(x=>x!==id); await sauverSync(); }
+    else if(r.conflit) conflit(r); else throw erreurServeur(r);
+  }
+  const st=idx.settings, ds=sync.docs._reglages;
+  if(st.maj && (!ds || ds.upd!==st.maj) && !differes.has('_reglages')){
+    const r=await rpc('opr_pousser',{p_cle:cle, p_id:'_reglages', p_base:ds?ds.rev:0, p_data:await chiffrerJson({f:'opr-sync',v:1,s:st}), p_supprime:false});
+    if(r.ok){ sync.docs._reglages={rev:r.rev, upd:st.maj}; await sauverSync(); }
+    else if(r.conflit) conflit(r); else throw erreurServeur(r);
+  }
+  for(const s of [...idx.chantiers]){
+    const d=sync.docs[s.id];
+    if((d && d.upd===s.updated) || differes.has(s.id)) continue;
+    let brut=null; try{ brut=await IDB.get('ch:'+s.id); }catch(e){}
+    if(!brut) continue;
+    const c=cleanChantier(brut), {doc,imgs,plans}=await versDoc(c), hs=[...imgs.keys()], manq=[];
+    for(let i=0;i<hs.length;i+=400){
+      const r=await rpc('opr_images_manquantes',{p_cle:cle, p_h:hs.slice(i,i+400)});
+      if(!r.ok) throw erreurServeur(r); manq.push(...r.manquantes);
+    }
+    for(let i=0;i<manq.length;i++){
+      etatSync(`Envoi de « ${c.nom||'chantier'} » : photo ${i+1}/${manq.length}…`);
+      const r=await rpc('opr_image_poser',{p_cle:cle, p_h:manq[i], p_data:await chiffrerImage(imgs.get(manq[i])), p_plan:plans.has(manq[i])});
+      if(!r.ok) throw erreurServeur(r);
+    }
+    const r=await rpc('opr_pousser',{p_cle:cle, p_id:c.id, p_base:d?d.rev:0, p_data:await chiffrerJson({f:'opr-sync',v:1,c:doc}), p_supprime:false});
+    if(r.ok){ sync.docs[c.id]={rev:r.rev, upd:c.updated}; await sauverSync(); }
+    else if(r.conflit) conflit(r); else throw erreurServeur(r);
+  }
+}
+async function cycle(){
+  if(saveT) await flush(); else await saving;   // flush() sans saisie en attente relancerait une synchro (boucle)
+  await tirer();
+  await pousser();
+  if(syncRelance) return;
+  sync.dernier=Date.now(); await sauverSync();
+}
+function planifierSync(ms){ if(!sync) return; clearTimeout(syncT); syncT=setTimeout(()=>synchroniser(), ms==null?4000:ms); }
+function synchroniser(){
+  if(!sync || !syncCles) return Promise.resolve();
+  if(EDITION.some(n=>$('#sh'+n).classList.contains('on'))){ planifierSync(5000); return Promise.resolve(); }
+  if(syncP){ syncRelance=true; return syncP; }
+  clearTimeout(syncT);
+  syncP=(async()=>{
+    syncEtat.encours=true; syncEtat.msg=''; afficherEtatSync();
+    try{
+      for(let tour=0; tour<4; tour++){ syncRelance=false; await cycle(); if(!syncRelance) break; }
+      syncEtat.erreur='';
+    }catch(e){ syncEtat.erreur=String(e&&e.message||e); console.warn('Synchro :',e); }
+    finally{ syncEtat.encours=false; syncEtat.msg=''; syncP=null; afficherEtatSync(); }
+  })();
+  return syncP;
+}
+
+/* ---------- Affichage ---------- */
+function quand(t){
+  if(!t) return 'jamais';
+  const m=Math.round((Date.now()-t)/60000); if(m<1) return 'à l\'instant'; if(m<60) return `il y a ${m} min`;
+  const d=new Date(t); return d.toDateString()===new Date().toDateString() ? `à ${d.getHours()}h${pad(d.getMinutes())}` : `le ${pad(d.getDate())}/${pad(d.getMonth()+1)}`;
+}
+function etatSync(m){ syncEtat.msg=m; afficherEtatSync(); }
+function resumeSync(){
+  if(!sync) return {cls:'off', t:'Synchroniser avec ton autre appareil'};
+  if(syncEtat.encours) return {cls:'encours', t:syncEtat.msg||'Synchronisation…'};
+  const n=enAttente(), ch_=n>1?'chantiers':'chantier';
+  if(syncEtat.erreur==='Pas de réseau') return {cls:'attente', t:n?`Pas de réseau : ${n} ${ch_} à envoyer dès son retour`:'Pas de réseau : synchro dès son retour'};
+  if(syncEtat.erreur) return {cls:'erreur', t:`Synchro impossible (${syncEtat.erreur}) — touche pour réessayer`};
+  if(n) return {cls:'attente', t:`${n} ${ch_} en attente d'envoi`};
+  return {cls:'', t:'Synchronisé '+quand(sync.dernier)};
+}
+function afficherEtatSync(){
+  const e=resumeSync(), b=$('#syncLine');
+  if(b){ b.className='sync-line '+e.cls; $('#syncLineT').textContent=e.t; }
+  const x=$('#syEtat'); if(x){ x.className='sy-etat '+e.cls; x.querySelector('.t').textContent=e.t; }
+}
+function ouvrirSync(){ dessinerSync(); openSheet('Sync'); if(sync && syncEtat.erreur) synchroniser(); }
+function dessinerSync(){
+  const b=$('#syBody');
+  if(!sync){
+    b.innerHTML=`<p class="sy-txt">Tes chantiers, points, réserves, photos et plans sont copiés automatiquement entre ton téléphone et ton PC.</p>
+      <p class="hint" style="margin-top:0">Tout est chiffré sur l'appareil avant l'envoi : le serveur ne peut lire ni tes chantiers ni tes photos. Sans réseau, l'appli marche comme avant et envoie dès que le réseau revient. Les photos restent 60 jours en ligne, le temps de passer d'un appareil à l'autre, puis seulement sur tes appareils.</p>
+      <label class="f">Premier appareil</label>
+      <button class="btn-primary" id="syCreer">Activer la synchronisation</button>
+      <p class="hint">À faire sur l'appareil qui a déjà tes chantiers (ton téléphone). Un code s'affiche : tu le tapes une seule fois sur l'autre appareil.</p>
+      <label class="f">Deuxième appareil : j'ai déjà un code</label>
+      <input class="t code" id="syCode" placeholder="XXXX-XXXX-XXXX-XXXX" autocomplete="off" autocapitalize="characters" autocorrect="off" spellcheck="false" maxlength="24">
+      <button class="btn-ghost bleu" id="syRejoindre">Relier cet appareil</button>`;
+    $('#syCreer').onclick=activerSync; $('#syRejoindre').onclick=rejoindreSync;
+    $('#syCode').onkeydown=e=>{ if(e.key==='Enter') rejoindreSync(); };
+    return;
+  }
+  b.innerHTML=`<div class="sy-etat" id="syEtat"><span class="d"></span><span class="t"></span></div>
+    <label class="f">Ton code de synchronisation</label>
+    <div class="sy-code">${esc(formatCode(sync.code))}</div>
+    <p class="hint">Sur ton autre appareil : menu ⋯ → Synchronisation → « J'ai déjà un code », puis tape ce code. Garde-le pour toi : il donne accès à tes chantiers.</p>
+    <button class="btn-primary" id="syMaint" style="margin-top:12px">Synchroniser maintenant</button>
+    <button class="btn-ghost" id="syCopier">Copier le code</button>
+    <p class="hint" id="syEspace"></p>
+    <button class="btn-ghost rouge" id="syStop">Arrêter la synchronisation sur cet appareil</button>`;
+  afficherEtatSync();
+  $('#syMaint').onclick=()=>{ syncEtat.erreur=''; synchroniser().then(espaceSync); };
+  $('#syCopier').onclick=async()=>{ try{ await navigator.clipboard.writeText(formatCode(sync.code)); toast('Code copié'); }catch(e){ toast('Copie impossible : recopie le code à la main'); } };
+  $('#syStop').onclick=arreterSync;
+  espaceSync();
+}
+async function espaceSync(){
+  if(!sync || !syncCles || !$('#syEspace')) return;
+  try{
+    const r=await rpc('opr_etat',{p_cle:syncCles.acces}), el=$('#syEspace'); if(!r.ok || !el) return;
+    const pl=(n,m)=>`${n} ${m}${n>1?'s':''}`;
+    el.textContent=`En ligne : ${pl(r.chantiers,'chantier')}, ${pl(r.photos,'photo')} et ${pl(r.plans,'plan')} — ${(r.octets/1048576).toFixed(1)} Mo sur ${Math.round(r.quota/1048576)} Mo. `
+      + `Les photos s'effacent du serveur 60 jours après leur envoi ; elles restent sur tes appareils. Les plans sont gardés.`;
+  }catch(e){}
+}
+async function dateReglages(){   // rédacteur saisi avant la synchro (sans date) : il doit partir aussi
+  if(idx.settings.nom && !idx.settings.maj){ idx.settings.maj=1; try{ await IDB.set('idx',idx); }catch(e){} }
+}
+async function activerSync(){
+  if(!window.crypto || !crypto.subtle){ toast('Synchronisation impossible sur ce navigateur'); return; }
+  const btn=$('#syCreer'); btn.disabled=true; btn.textContent='Création du code…';
+  try{
+    const code=nouveauCode(), cles=await deriverCles(code);
+    const r=await rpc('opr_ouvrir',{p_cle:cles.acces, p_creer:true});
+    if(!r.ok) throw erreurServeur(r);
+    syncCles=cles; sync=nouvelleSync(code); syncEtat.erreur='';
+    await dateReglages(); await sauverSync(); dessinerSync(); if(!ch) renderHome();
+    toast('Synchronisation activée');
+    synchroniser().then(espaceSync);
+  }catch(e){ toast('Activation impossible : '+(e.message||e)); if(btn.isConnected){ btn.disabled=false; btn.textContent='Activer la synchronisation'; } }
+}
+async function rejoindreSync(){
+  const code=lireCode($('#syCode').value);
+  if(!code){ toast('Code incomplet : 16 caractères (ex. K7QM-2XPA-9RTW-4HZC)'); $('#syCode').focus(); return; }
+  if(!window.crypto || !crypto.subtle){ toast('Synchronisation impossible sur ce navigateur'); return; }
+  const btn=$('#syRejoindre'); btn.disabled=true; btn.textContent='Vérification du code…';
+  try{
+    const cles=await deriverCles(code);
+    const r=await rpc('opr_ouvrir',{p_cle:cles.acces, p_creer:false});
+    if(!r.ok) throw (r.erreur==='inconnu' ? new Error('code inconnu, vérifie-le sur ton autre appareil') : erreurServeur(r));
+    syncCles=cles; sync=nouvelleSync(code); syncEtat.erreur='';
+    await dateReglages(); await sauverSync(); dessinerSync(); if(!ch) renderHome();
+    toast('Appareil relié : récupération de tes chantiers…');
+    await synchroniser(); espaceSync();
+    if(!syncEtat.erreur) toast(`${idx.chantiers.length} chantier${idx.chantiers.length>1?'s':''} sur cet appareil`);
+  }catch(e){ toast('Impossible de relier : '+(e.message||e)); if(btn.isConnected){ btn.disabled=false; btn.textContent='Relier cet appareil'; } }
+}
+async function arreterSync(){
+  if(!confirm('Arrêter la synchronisation sur cet appareil ?\n\nTes chantiers restent sur cet appareil ; ils ne seront plus mis à jour avec ton autre appareil.')) return;
+  if(syncCles && confirm('Effacer aussi la copie chiffrée en ligne ?\n\nOK seulement si tu arrêtes la synchronisation sur tous tes appareils.\nAnnuler = la garder (tes autres appareils continuent de se synchroniser).')){
+    try{ const r=await rpc('opr_effacer',{p_cle:syncCles.acces}); toast(r.ok?'Copie en ligne effacée':'Copie en ligne introuvable'); }catch(e){ toast('Effacement impossible : '+e.message); }
+  }
+  clearTimeout(syncT); sync=null; syncCles=null; syncEtat.erreur=''; await sauverSync();
+  closeSheet('Sync'); if(!ch) renderHome(); toast('Synchronisation arrêtée sur cet appareil');
+}
+$('#syncLine').onclick=ouvrirSync;
+$('#syClose').onclick=()=>closeSheet('Sync');
+document.addEventListener('visibilitychange',()=>{ if(sync && (document.visibilityState==='visible' || enAttente())) synchroniser(); });
+window.addEventListener('online',()=>{ if(sync) synchroniser(); });
+setInterval(()=>{ if(document.visibilityState!=='visible') return; if(sync) synchroniser(); else afficherEtatSync(); },60000);
 
 /* ---------- Démarrage ---------- */
 if('serviceWorker' in navigator && location.protocol!=='file:'){ window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{})); }

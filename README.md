@@ -20,11 +20,21 @@ suivre un chantier visite après visite puis mener les **OPR** (opérations pré
   Un point de suivi peut être reporté en réserve d'un geste.
 - **Plans annotés** : import d'un plan PDF (une ou plusieurs pages), d'une photo ou d'une capture ; on touche (ou on
   clique) l'endroit, le point s'y épingle. Zoom au doigt ou à la molette.
-- **Transfert** d'un chantier entre le téléphone et le PC par fichier, sauvegarde complète, export Excel (CSV).
+- **Synchronisation téléphone ↔ PC** (optionnelle) : un code à taper une fois sur le second appareil, puis les
+  chantiers, photos et plans se recopient tout seuls. Hors réseau, l'appli marche comme avant et envoie au retour du
+  réseau ; si les deux appareils ont modifié le même chantier, les deux versions sont fusionnées point par point.
+- **Transfert** d'un chantier par fichier, sauvegarde complète, export Excel (CSV).
 
 ## Choix techniques
 
-- **Aucun serveur, aucun compte** : tout reste sur l'appareil (IndexedDB). Rien ne part sur Internet.
+- **Aucun compte** : les données vivent sur l'appareil (IndexedDB). Sans synchronisation, rien ne part sur Internet.
+- **Synchronisation chiffrée de bout en bout** : chaque appareil chiffre chantiers et images (AES-GCM, clés tirées du
+  code de synchronisation par PBKDF2) avant l'envoi. Le relais (Supabase, fonctions de `serveur/synchro.sql`) ne
+  stocke que du chiffré et ne reçoit jamais le code ; chaque image n'est envoyée qu'une fois. Les photos s'effacent
+  du serveur 60 jours après leur envoi (elles restent sur les appareils ; un appareil qui ne l'a pas affiche un repère
+  « sur l'autre appareil »), les plans sont gardés.
+- **Tests** : `outils/test_synchro.py` (téléphone + PC dans le vrai Edge, vrai serveur ; `--mock` pour un serveur
+  simulé) et `outils/test_regression.py` (fonctions de l'appli, formats iPhone et PC).
 - **Fonctionne sans réseau** (service worker), ce qui compte au fond d'un sous-sol ou d'un bâtiment en travaux.
 - Un fichier HTML/JavaScript ; seule bibliothèque : [pdf.js](https://mozilla.github.io/pdf.js/) (Apache 2.0) dans
   `lib/`, chargée uniquement pour importer un plan PDF.
